@@ -1,4 +1,4 @@
-# api-client-kit
+# py-api-client-kit
 
 ‼️ **Work in progress** — active development.
 
