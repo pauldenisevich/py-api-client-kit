@@ -8,9 +8,7 @@ Thumbs.db
 *.swp
 *~
 *.orig
-.vscode/*
-!.vscode/settings.json
-!.vscode/extensions.json
+.vscode/
 
 # ------------------------------------------------
 # Secrets / env
