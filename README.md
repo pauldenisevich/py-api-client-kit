@@ -1,6 +1,6 @@
 # api-client-kit
 
-![CI](https://github.com/pauldenisevich/py-api-client-kit/actions/workflows/ci.yml)
+[![CI](https://github.com/pauldenisevich/py-api-client-kit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pauldenisevich/py-api-client-kit/actions/workflows/ci.yml)
 
 > Work in progress: `api-client-kit` is under active early development and is not ready for production use yet.
 
