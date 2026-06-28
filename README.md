@@ -1,5 +1,7 @@
 # api-client-kit
 
+![CI](https://github.com/pauldenisevich/py-api-client-kit/actions/workflows/ci.yml)
+
 > Work in progress: `api-client-kit` is under active early development and is not ready for production use yet.
 
 `api-client-kit` is an opinionated Python toolkit for building robust API clients.
