@@ -383,6 +383,130 @@ Only use force push when there is an explicit, reviewed reason, such as cleaning
 
 Never force-push release tags without an explicit release-policy decision.
 
+## Versioning Policy
+
+This project uses Semantic Versioning.
+
+Version format:
+
+```text
+MAJOR.MINOR.PATCH
+```
+
+During early development, the project uses `0.x` versions.
+
+## Planned Version Path
+
+The planned early version path is:
+
+```text
+0.0.1  placeholder package/name-reservation release
+0.1.0  first usable public release
+0.1.x  patch fixes for 0.1.0
+0.2.0  next backward-compatible feature release
+```
+
+## `0.0.1` Placeholder Release
+
+Version `0.0.1` is reserved for an optional placeholder release.
+
+Purpose:
+
+* reserve the `api-client-kit` name on PyPI
+* link the PyPI package to the GitHub repository
+* clearly mark the package as work in progress
+* avoid implying production readiness
+
+Version `0.0.1` should not be presented as a usable production package.
+
+## `0.1.0` First Public Release
+
+Version `0.1.0` is the first intended usable public release.
+
+It should include the first stable package foundation for:
+
+* sync and async client foundations
+* request and response primitives
+* structured errors
+* redaction helpers
+* auth providers
+* retry and backoff support
+* rate-limit interfaces
+* pagination helpers
+* observability hooks
+* examples
+* public documentation
+* CI and release workflow
+
+## Patch Releases
+
+Patch releases are for fixes that do not add major new public features.
+
+Examples:
+
+```text
+0.1.1
+0.1.2
+0.1.3
+```
+
+Use patch releases for:
+
+* bug fixes
+* documentation corrections
+* packaging fixes
+* CI/release workflow fixes
+* small compatibility fixes
+* safe internal refactors
+
+Patch releases should not introduce large new public APIs.
+
+## Minor Releases
+
+Minor releases are for backward-compatible feature additions.
+
+Examples:
+
+```text
+0.2.0
+0.3.0
+```
+
+Use minor releases for:
+
+* new auth providers
+* new retry/rate-limit helpers
+* new pagination helpers
+* new observability hooks
+* new examples
+* backward-compatible public API additions
+
+## Breaking Changes
+
+While the project is in `0.x`, public APIs may still evolve.
+
+Even during `0.x`, breaking changes should be intentional, documented, and called out in the changelog.
+
+After a stable `1.0.0` release, breaking changes should require a major version bump.
+
+## Version Source
+
+The package version is defined in:
+
+```text
+pyproject.toml
+```
+
+The runtime package exposes the same version through:
+
+```python
+api_client_kit.__version__
+```
+
+When preparing a release, update both if the project still stores the version in both places.
+
+A future task may centralize the version source to avoid duplication.
+
 ## Private Files
 
 Private files must never be committed.
