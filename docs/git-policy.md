@@ -288,6 +288,101 @@ After installation, the hook runs automatically on `git commit`.
 
 If the hook modifies files, review the changes, stage them again, and rerun the checks before committing.
 
+## Push Policy
+
+Use small, intentional commits and push only after local checks pass.
+
+The normal direct-to-`main` flow is:
+
+```bash
+git status
+git add <files>
+git status
+git diff --cached
+git commit -m "<type>: <message>"
+git log --show-signature -1
+git push origin main
+```
+
+Do not blindly run:
+
+```bash
+git add .
+```
+
+unless you have already inspected `git status` and confirmed every untracked or modified file is safe to stage.
+
+Before pushing, confirm:
+
+* the commit is scoped
+* the commit message uses an approved prefix
+* the commit is signed
+* local checks pass
+* private files are not staged
+* generated files are not staged unless intentionally required
+* `docs/private/` is not tracked
+
+After pushing, verify:
+
+* the commit appears on GitHub
+* GitHub shows the commit as `Verified`
+* GitHub Actions pass once CI exists
+
+## Safe Staging
+
+Prefer staging explicit files:
+
+```bash
+git add README.md pyproject.toml tests/unit/test_import_unit.py
+```
+
+Use patch staging when only part of a file should be committed:
+
+```bash
+git add -p
+```
+
+Use all-file staging only after review:
+
+```bash
+git status
+git diff
+git add .
+git diff --cached
+```
+
+## Push Target
+
+The normal push target is:
+
+```bash
+git push origin main
+```
+
+For the first push from a new clone, use:
+
+```bash
+git push -u origin main
+```
+
+## Push Failure Policy
+
+If a push fails, do not force-push by default.
+
+First inspect the error.
+
+If the remote branch has new commits, fetch and rebase or fast-forward carefully:
+
+```bash
+git fetch origin
+git status
+git pull --ff-only origin main
+```
+
+Only use force push when there is an explicit, reviewed reason, such as cleaning a private pre-publication repository before launch.
+
+Never force-push release tags without an explicit release-policy decision.
+
 ## Private Files
 
 Private files must never be committed.
