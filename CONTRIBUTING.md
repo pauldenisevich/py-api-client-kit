@@ -99,3 +99,41 @@ For now, a good pull request should:
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
+
+## Pre-commit
+
+This project uses `pre-commit` for local file hygiene, Ruff linting, and Ruff formatting.
+
+Install the Git hook after setting up the development environment:
+
+```bash
+uv run pre-commit install
+```
+
+Run all pre-commit hooks manually:
+
+```bash
+uv run pre-commit run --all-files
+```
+
+The configured hooks check:
+
+* trailing whitespace
+* final newline at end of files
+* YAML syntax
+* TOML syntax
+* large accidental files
+* merge conflict markers
+* line endings
+* Ruff linting
+* Ruff formatting
+
+If a hook modifies files, review the changes, stage them again, and rerun the checks before committing.
+
+Pre-commit does not replace the full local check sequence. Before pushing meaningful changes, run:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+```
