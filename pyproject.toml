@@ -100,3 +100,21 @@ ignore = ["ANN401"]
 quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
+
+[tool.coverage.run]
+branch = true
+source = ["api_client_kit"]
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+skip_covered = true
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+  "raise NotImplementedError",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
