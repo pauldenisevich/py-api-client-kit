@@ -507,6 +507,114 @@ When preparing a release, update both if the project still stores the version in
 
 A future task may centralize the version source to avoid duplication.
 
+## Tag Policy
+
+Release tags use this format:
+
+```text
+vMAJOR.MINOR.PATCH
+```
+
+Examples:
+
+```text
+v0.0.1
+v0.1.0
+v0.1.1
+v0.2.0
+```
+
+Tags should correspond exactly to the package version.
+
+For example:
+
+| Package version | Git tag  |
+| --------------- | -------- |
+| `0.0.1`         | `v0.0.1` |
+| `0.1.0`         | `v0.1.0` |
+| `0.1.1`         | `v0.1.1` |
+| `0.2.0`         | `v0.2.0` |
+
+## When to Tag
+
+Create a tag only for an intentional release.
+
+Do not tag normal development commits.
+
+Do not tag documentation-only commits unless they are part of a release.
+
+Do not tag CI/tooling commits unless they are part of a release.
+
+## Tag Creation
+
+Before creating a tag:
+
+* confirm the version is correct in `pyproject.toml`
+* confirm the runtime package version matches, if applicable
+* confirm `CHANGELOG.md` is updated
+* run local checks
+* verify CI passes
+* confirm the release commit is pushed
+
+Create the tag from the release commit:
+
+```bash
+git tag v0.1.0
+```
+
+Push the tag:
+
+```bash
+git push origin v0.1.0
+```
+
+Or push all intended tags:
+
+```bash
+git push origin main --tags
+```
+
+Use targeted tag pushes when possible to avoid pushing accidental local tags.
+
+## Signed Tags
+
+Signed tags are preferred when the signing workflow is available.
+
+SSH-signed or GPG-signed tags may be used depending on the maintainer environment.
+
+If signed tags are configured, create a signed tag:
+
+```bash
+git tag -s v0.1.0
+```
+
+If signed tags are not configured yet, normal lightweight tags are acceptable for early pre-release work, but release documentation should clearly state which tag type was used.
+
+## Tag Safety
+
+Never reuse a released tag.
+
+Never move a public release tag unless there is an explicit emergency correction and the impact is understood.
+
+If a tag was created locally by mistake and not pushed, delete it locally:
+
+```bash
+git tag -d v0.1.0
+```
+
+If a tag was pushed by mistake, stop and review before deleting or replacing it.
+
+## Planned Early Tags
+
+Planned early tags:
+
+```text
+v0.0.1  optional placeholder release
+v0.1.0  first usable public release
+v0.1.1  first patch release if needed
+v0.2.0  next backward-compatible feature release
+```
+
 ## Private Files
 
 Private files must never be committed.
