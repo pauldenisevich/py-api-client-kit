@@ -238,6 +238,56 @@ After pushing, verify GitHub shows the commit as:
 Verified
 ```
 
+## Local Pre-Commit Checklist
+
+Before every meaningful commit, run the standard local checks:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+```
+
+These checks verify:
+
+* Ruff linting passes
+* Ruff formatting is already applied
+* the test suite passes
+
+If any check fails, do not commit yet. Fix the issue, rerun the checks, and review the diff again.
+
+## Optional Full Pre-Commit Run
+
+The repository also uses `pre-commit`.
+
+Run all configured hooks manually with:
+
+```bash
+uv run pre-commit run --all-files
+```
+
+The pre-commit hooks check file hygiene, TOML/YAML syntax, merge conflict markers, Ruff linting, and Ruff formatting.
+
+This does not replace the standard local check sequence. Before committing meaningful work, still run:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+```
+
+## Installed Git Hook
+
+After setting up the repository, install the pre-commit Git hook once:
+
+```bash
+uv run pre-commit install
+```
+
+After installation, the hook runs automatically on `git commit`.
+
+If the hook modifies files, review the changes, stage them again, and rerun the checks before committing.
+
 ## Private Files
 
 Private files must never be committed.
