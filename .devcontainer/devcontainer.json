@@ -1,0 +1,161 @@
+{
+    "name": "Py-API-Client-Kit",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
+    },
+
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+    "runArgs": [
+        "--init"
+    ],
+
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "configureZshAsDefaultShell": true,
+            "installOhMyZsh": true
+        }
+    },
+
+    "mounts": [
+        "source=py_api_client_kit_codex_config,target=/home/vscode/.codex,type=volume",
+        "source=py_api_client_kit_vscode_config,target=/home/vscode/.config,type=volume"
+    ],
+
+    "remoteUser": "vscode",
+
+    "postCreateCommand": "bash -lc 'bash ${containerWorkspaceFolder}/.devcontainer/scripts/setup.sh'",
+    "postStartCommand": "bash -lc 'bash ${containerWorkspaceFolder}/.devcontainer/scripts/post-start.sh'",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bierner.markdown-preview-github-styles",
+                "charliermarsh.ruff",
+                "davidanson.vscode-markdownlint",
+                "eamodio.gitlens",
+                "editorconfig.editorconfig",
+                "foxundermoon.shell-format",
+                "mikestead.dotenv",
+                "ms-python.debugpy",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-vscode-remote.remote-containers",
+                "openai.chatgpt",
+                "redhat.vscode-yaml",
+                "tamasfe.even-better-toml",
+                "usernamehw.errorlens"
+            ],
+            "settings": {
+                "files.exclude": {
+                    "**/.venv/**": true,
+                    "**/**pycache**/**": true,
+                    "**/.pytest_cache/**": true,
+                    "**/.mypy_cache/**": true,
+                    "**/.ruff_cache/**": true,
+                    "**/*.egg-info/**": true,
+                    "**/dist/**": true,
+                    "**/build/**": true,
+                    "**/htmlcov/**": true
+                },
+                "files.watcherExclude": {
+                    "**/.git/**": true,
+                    "**/.venv/**": true,
+                    "**/venv/**": true,
+                    "**/__pycache__/**": true,
+                    "**/.pytest_cache/**": true,
+                    "**/.mypy_cache/**": true,
+                    "**/.ruff_cache/**": true,
+                    "**/*.egg-info/**": true,
+                    "**/dist/**": true,
+                    "**/build/**": true,
+                    "**/htmlcov/**": true,
+                    "**/.coverage": true,
+                    "**/.cache/**": true
+                },
+                "search.exclude": {
+                    "**/.git/**": true,
+                    "**/.venv/**": true,
+                    "**/venv/**": true,
+                    "**/__pycache__/**": true,
+                    "**/.pytest_cache/**": true,
+                    "**/.mypy_cache/**": true,
+                    "**/.ruff_cache/**": true,
+                    "**/*.egg-info/**": true,
+                    "**/dist/**": true,
+                    "**/build/**": true,
+                    "**/htmlcov/**": true,
+                    "**/.coverage": true,
+                    "**/.cache/**": true
+                },
+
+                "editor.formatOnSave": true,
+                "editor.codeActionsOnSave": {
+                    "source.fixAll": "explicit",
+                    "source.organizeImports": "never"
+                },
+
+                "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+                "python.terminal.activateEnvironment": true,
+                "python.analysis.autoImportCompletions": true,
+                "python.analysis.autoSearchPaths": true,
+                "python.analysis.diagnosticMode": "openFilesOnly",
+                "python.analysis.indexing": true,
+                "python.analysis.typeCheckingMode": "basic",
+                "python.testing.pytestEnabled": true,
+                "python.testing.unittestEnabled": false,
+
+                "ruff.configuration": "${containerWorkspaceFolder}/pyproject.toml",
+                "ruff.nativeServer": "on",
+
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.formatOnSave": true
+                },
+
+                "[toml]": {
+                    "editor.defaultFormatter": "tamasfe.even-better-toml"
+                },
+
+                "[markdown]": {
+                    "errorLens.enabled": false
+                },
+
+                "[plaintext]": {
+                    "errorLens.enabled": false
+                },
+
+                "errorLens.exclude": [
+                    "**/*.md",
+                    "**/*.txt"
+                ],
+
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "terminal.integrated.profiles.linux": {
+                    "zsh": {
+                        "path": "/usr/bin/zsh",
+                        "args": [
+                        "-l"
+                        ]
+                    },
+                    "bash": {
+                        "path": "/bin/bash",
+                        "args": [
+                        "-l"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+
+    "remoteEnv": {
+        "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+        "CONTAINER_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
+        "UV_LINK_MODE": "copy",
+        "UV_NO_WARNINGS": "1"
+    }
+}
