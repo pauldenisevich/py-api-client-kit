@@ -615,6 +615,16 @@ v0.1.1  first patch release if needed
 v0.2.0  next backward-compatible feature release
 ```
 
+## Release Process
+
+The full release checklist lives in:
+
+```text
+docs/release.md
+```
+
+Use that document for version bumps, changelog updates, local checks, CI verification, tags, PyPI verification, and GitHub releases.
+
 ## Private Files
 
 Private files must never be committed.
