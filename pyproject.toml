@@ -34,7 +34,15 @@ classifiers = [
 dependencies = ["httpx>=0.28"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = [
+  "build>=1.2",
+  "pre-commit>=4.0",
+  "pytest>=8.0",
+  "pytest-asyncio>=1.0",
+  "pytest-cov>=6.0",
+  "ruff>=0.12",
+  "twine>=6.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/pauldenisevich/py-api-client-kit"
