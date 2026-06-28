@@ -9,6 +9,7 @@ description = "Opinionated toolkit for building robust Python API clients."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
+authors = [{ name = "Paul Denisevich" }]
 keywords = [
   "api-client",
   "httpx",
@@ -23,25 +24,22 @@ classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3 :: Only",
   "Typing :: Typed",
 ]
 dependencies = ["httpx>=0.28"]
-
-[[project.authors]]
-name = "Paul Denisevich"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
 
 [project.urls]
-Homepage = "[https://github.com/pauldenisevich/py-api-client-kit](https://github.com/pauldenisevich/py-api-client-kit)"
-Repository = "[https://github.com/pauldenisevich/py-api-client-kit](https://github.com/pauldenisevich/py-api-client-kit)"
-Issues = "[https://github.com/pauldenisevich/py-api-client-kit/issues](https://github.com/pauldenisevich/py-api-client-kit/issues)"
+Homepage = "https://github.com/pauldenisevich/py-api-client-kit"
+Repository = "https://github.com/pauldenisevich/py-api-client-kit"
+Issues = "https://github.com/pauldenisevich/py-api-client-kit/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["api_client_kit"]
