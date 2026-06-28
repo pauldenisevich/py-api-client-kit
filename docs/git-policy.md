@@ -131,6 +131,113 @@ After pushing, verify GitHub shows the commit as:
 Verified
 ```
 
+## Commit Message Policy
+
+Commit messages should be short, clear, and action-oriented.
+
+Use this format:
+
+```text
+<type>: <summary>
+```
+
+The summary should describe what changed, not how difficult the work was.
+
+Good examples:
+
+```text
+chore: add devcontainer foundation
+docs: add project positioning
+build: configure package metadata
+test: configure coverage
+ci: add lint test and build workflow
+```
+
+Avoid vague messages such as:
+
+```text
+update stuff
+fix things
+changes
+work
+misc
+```
+
+## Commit Prefixes
+
+Use these commit prefixes:
+
+| Prefix      | Use for                                                               |
+| ----------- | --------------------------------------------------------------------- |
+| `chore:`    | repository maintenance, non-runtime setup, small project housekeeping |
+| `feat:`     | user-facing package functionality                                     |
+| `fix:`      | bug fixes                                                             |
+| `docs:`     | documentation-only changes                                            |
+| `test:`     | tests or test configuration                                           |
+| `ci:`       | GitHub Actions, CI/CD, release workflows                              |
+| `refactor:` | behavior-preserving code restructuring                                |
+| `build:`    | packaging, dependencies, build system, tooling configuration          |
+| `release:`  | release commits, version bumps, changelog finalization                |
+
+## Prefix Rules
+
+Use `docs:` when the change only affects documentation.
+
+Use `test:` when the change only affects tests or test configuration.
+
+Use `build:` for package metadata, dependencies, build tools, Ruff, Pytest, coverage, pre-commit, Makefile, and packaging configuration.
+
+Use `ci:` only for CI/CD workflow files and automation.
+
+Use `chore:` for project setup and maintenance that does not fit `build:`, `docs:`, `test:`, or `ci:`.
+
+Use `feat:` only when adding public package behavior.
+
+Use `fix:` only when correcting broken behavior.
+
+Use `refactor:` only when restructuring code without changing behavior.
+
+Use `release:` only for formal release preparation commits.
+
+## Scope
+
+Optional scopes may be added later if useful:
+
+```text
+feat(client): add sync client request method
+test(retries): add retry policy tests
+docs(auth): document bearer token auth
+```
+
+For now, scopes are optional. Prefer simple messages unless a scope improves clarity.
+
+## Commit Body
+
+Most small commits do not need a body.
+
+Use a commit body when the change needs extra context, such as:
+
+* why a tradeoff was chosen
+* why a non-obvious implementation is safe
+* what follow-up work remains
+* why a temporary limitation exists
+
+## Signed Commit Requirement
+
+Commits should be signed.
+
+After committing, verify locally:
+
+```bash
+git log --show-signature -1
+```
+
+After pushing, verify GitHub shows the commit as:
+
+```text
+Verified
+```
+
 ## Private Files
 
 Private files must never be committed.
