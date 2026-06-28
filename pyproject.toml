@@ -54,11 +54,18 @@ packages = ["api_client_kit"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = ["-ra", "--strict-markers"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+addopts = ["-ra", "--strict-markers", "--strict-config"]
 markers = [
   "unit: Fast isolated unit tests with no external services",
   "integration: Integration tests using local transports or test doubles",
 ]
+filterwarnings = ["error"]
 
 [tool.ruff]
 target-version = "py310"
