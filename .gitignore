@@ -1,0 +1,69 @@
+# ------------------------------------------------
+# OS / editor / local
+# ------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+*.swo
+*.swp
+*~
+*.orig
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ------------------------------------------------
+# Secrets / env
+# ------------------------------------------------
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+
+# ------------------------------------------------
+# Python caches / artifacts
+# ------------------------------------------------
+**pycache**/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# ------------------------------------------------
+# Virtual environments
+# ------------------------------------------------
+.venv/
+venv/
+venv.bak/
+ENV/
+env/
+
+# ------------------------------------------------
+# Packaging / build artifacts
+# ------------------------------------------------
+build/
+dist/
+*.egg-info/
+.eggs/
+*.whl
+
+# ------------------------------------------------
+# Tool caches / local data / logs
+# ------------------------------------------------
+.cache/
+_cache/
+logs/
+*.log
+*.log.*
+temp/
+tmp/
