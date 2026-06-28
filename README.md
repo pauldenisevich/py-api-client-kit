@@ -1,6 +1,8 @@
 # api-client-kit
 
 [![CI](https://github.com/pauldenisevich/py-api-client-kit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pauldenisevich/py-api-client-kit/actions/workflows/ci.yml)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
 > Work in progress: `api-client-kit` is under active early development and is not ready for production use yet.
 
