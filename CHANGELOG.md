@@ -18,16 +18,24 @@ This project follows Semantic Versioning.
 
 * Nothing yet.
 
-## 0.0.1 - Planned
+## 0.0.1 - 2026-06-29
 
 Placeholder release for package-name reservation.
 
-Planned purpose:
+### Added
 
-* reserve the `api-client-kit` package name on PyPI
-* link the package to the GitHub repository
-* clearly mark the project as work in progress
-* avoid implying production readiness
+* Added initial package skeleton.
+* Added MIT license.
+* Added public README and documentation foundation.
+* Added local development tooling with `uv`, Ruff, Pytest, coverage, pre-commit, and Makefile shortcuts.
+* Added GitHub Actions CI for Python 3.10, 3.11, 3.12, and 3.13.
+* Added package build configuration with Hatchling.
+
+### Notes
+
+This release exists to reserve the `api-client-kit` package name on PyPI and link the package to the public GitHub repository.
+
+It is not production-ready and does not yet include runtime API client functionality.
 
 ## 0.1.0 - Planned
 

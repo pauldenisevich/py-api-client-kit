@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "api-client-kit"
-version = "0.0.0"
+version = "0.0.1"
 description = "Opinionated toolkit for building robust Python API clients."
 readme = "README.md"
 requires-python = ">=3.10"
