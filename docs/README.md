@@ -116,16 +116,20 @@ Do not include private maintainer notes, Codex logs, private sprint context, cre
 
 ## Documentation Roadmap
 
-Sprint 1 should establish the documentation foundation.
+Documentation will expand alongside implemented package functionality.
 
-Later sprints should expand docs alongside implementation:
+As features are added, the docs should be updated to cover:
 
-```text
-Sprint 2 → core client docs
-Sprint 3 → errors, decoding, and redaction docs
-Sprint 4 → auth docs
-Sprint 5 → retry and rate-limit docs
-Sprint 6 → pagination docs
-Sprint 7 → observability and logging docs
-Sprint 8 → examples, README completion, release docs, and public v0.1.0 polish
-```
+- core sync and async clients
+- request and response handling
+- structured errors
+- redaction
+- authentication
+- retries and backoff
+- rate-limit handling
+- pagination
+- observability hooks
+- examples
+- release process
+
+Public documentation should describe implemented behavior clearly and avoid presenting planned features as already available.
