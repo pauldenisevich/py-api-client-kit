@@ -1,7 +1,8 @@
 # api-client-kit
 
 [![CI](https://github.com/pauldenisevich/py-api-client-kit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pauldenisevich/py-api-client-kit/actions/workflows/ci.yml)
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+[![PyPI version](https://img.shields.io/pypi/v/api-client-kit.svg)](https://pypi.org/project/api-client-kit/)
+[![Python versions](https://img.shields.io/pypi/pyversions/api-client-kit.svg)](https://pypi.org/project/api-client-kit/)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
 > Work in progress: `api-client-kit` is under active early development and is not ready for production use yet.
@@ -20,12 +21,20 @@ Current status:
 
 ```text
 public repository
+placeholder package published to PyPI
 package skeleton exists
 local development tooling exists
 CI exists
 runtime API client implementation not started yet
-not published to PyPI yet
+````
+
+The current PyPI release is:
+
+```text
+api-client-kit==0.0.1
 ```
+
+This release exists to reserve the package name and connect the PyPI project to the public GitHub repository.
 
 The package is not ready for production use.
 
@@ -34,14 +43,6 @@ The first intended usable public release is:
 ```text
 api-client-kit==0.1.0
 ```
-
-A possible placeholder package release may happen earlier as:
-
-```text
-api-client-kit==0.0.1
-```
-
-The purpose of `0.0.1` would be package-name reservation and transparent early project visibility, not production use.
 
 ## What Problem This Solves
 
@@ -154,18 +155,24 @@ The project focuses on API-client infrastructure primitives first.
 
 ## Installation
 
-The package is not published yet.
-
-Future installation target:
+The placeholder package is published on PyPI:
 
 ```bash
-pip install api-client-kit
+pip install api-client-kit==0.0.1
 ```
 
 For `uv` users:
 
 ```bash
-uv add api-client-kit
+uv add api-client-kit==0.0.1
+```
+
+This version is not production-ready and does not yet include runtime API client functionality.
+
+The first intended usable public release will be:
+
+```text
+api-client-kit==0.1.0
 ```
 
 ## Documentation
