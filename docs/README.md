@@ -47,6 +47,7 @@ The following public docs currently exist:
 * [Project Positioning](project-positioning.md) — explains what the package is, who it is for, and how it differs from raw `httpx`, SDK generators, and retry-only helpers.
 * [Architecture](architecture.md) — describes the intended package architecture, request pipeline, layers, and design boundaries.
 * [Local Development](local-development.md) — explains devcontainer setup, `uv`, pip-compatible workflow, checks, pre-commit, and package builds.
+* [Testing](testing.md) — documents pytest, unit/integration test categories, no-network policy, coverage, async tests, and CI testing behavior.
 * [Git Policy](git-policy.md) — documents branch model, commit message policy, local checks, push policy, versioning, and tags.
 * [Release Process](release.md) — documents version bumps, changelog updates, local checks, CI verification, tags, PyPI verification, and GitHub releases.
 
@@ -54,7 +55,6 @@ The following public docs currently exist:
 
 The following public docs are planned as part of the documentation foundation:
 
-* `testing.md` — pytest, no-network test policy, coverage, and test categories.
 * `security-and-redaction.md` — redaction principles and secret-safety policy.
 
 ## Planned Feature Docs

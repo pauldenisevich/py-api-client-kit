@@ -1,0 +1,438 @@
+# Testing
+
+This document defines the testing policy for `api-client-kit`.
+
+The project uses `pytest` and is designed to be tested without real external API calls, real credentials, or real network dependencies.
+
+## Status
+
+`api-client-kit` is currently under active early development.
+
+The current test suite contains the initial package import smoke test. As runtime functionality is added, every feature should include focused tests.
+
+## Test Goals
+
+Tests should prove that the package is:
+
+* importable
+* deterministic
+* safe around credentials and sensitive data
+* compatible with supported Python versions
+* consistent across sync and async behavior
+* reliable without real network access
+* easy to maintain as public APIs evolve
+
+## Test Framework
+
+The project uses:
+
+```text
+pytest
+```
+
+Run the test suite:
+
+```bash
+uv run pytest
+```
+
+Run a specific test file:
+
+```bash
+uv run pytest tests/unit/test_import_unit.py
+```
+
+Run with verbose output:
+
+```bash
+uv run pytest -vv
+```
+
+## Test Categories
+
+The repository uses these test directories:
+
+```text
+tests/
+  unit/
+  integration/
+```
+
+## Unit Tests
+
+Unit tests belong in:
+
+```text
+tests/unit/
+```
+
+Unit tests should cover isolated behavior such as:
+
+* URL joining
+* header merging
+* request option defaults
+* redaction helpers
+* error mapping
+* retry decisions
+* backoff calculations
+* `Retry-After` parsing
+* pagination parsing
+* hook context construction
+
+Unit tests should be fast, deterministic, and independent of external services.
+
+## Integration Tests
+
+Integration tests belong in:
+
+```text
+tests/integration/
+```
+
+Integration tests should test package behavior across multiple internal components, but they must still avoid real external APIs.
+
+For HTTP behavior, integration tests should use local transports and test doubles such as:
+
+```text
+httpx.MockTransport
+```
+
+Examples of integration-style behavior:
+
+* sync client request flow
+* async client request flow
+* auth injection through the client
+* retry loop behavior
+* structured error raising
+* pagination iteration
+* hook call ordering
+
+## No Real Network Calls
+
+Tests must not call real external APIs.
+
+Do not write tests that require:
+
+* live SaaS APIs
+* public internet endpoints
+* real API keys
+* bearer tokens
+* OAuth credentials
+* GitHub tokens
+* PyPI tokens
+* customer data
+* local services not created by the test itself
+
+HTTP behavior should be simulated with `httpx.MockTransport` or other local test doubles.
+
+## No Secrets in Tests
+
+Tests must not contain real secrets.
+
+Do not commit:
+
+* API keys
+* bearer tokens
+* refresh tokens
+* passwords
+* cookies
+* private keys
+* real customer data
+* real service credentials
+
+Use obvious fake values:
+
+```python
+"test-api-key"
+"test-token"
+"secret-value"
+```
+
+Any test involving secrets should assert that sensitive values are redacted from errors, logs, hook payloads, and representations.
+
+## Pytest Markers
+
+The project defines these markers:
+
+```text
+unit: Fast isolated unit tests with no external services
+integration: Integration tests using local transports or test doubles
+```
+
+Example:
+
+```python
+from __future__ import annotations
+
+import pytest
+
+pytestmark = [pytest.mark.unit]
+
+
+def test_example() -> None:
+    assert True
+```
+
+Run unit tests:
+
+```bash
+uv run pytest -m unit
+```
+
+Run integration tests:
+
+```bash
+uv run pytest -m integration
+```
+
+## Async Tests
+
+Async tests use `pytest-asyncio`.
+
+The project uses strict asyncio mode.
+
+Async tests should be explicit:
+
+```python
+from __future__ import annotations
+
+import pytest
+
+pytestmark = [pytest.mark.unit]
+
+
+@pytest.mark.asyncio
+async def test_async_example() -> None:
+    assert True
+```
+
+Avoid implicit event loop behavior.
+
+Avoid global async state.
+
+Prefer function-scoped test isolation unless a stronger reason exists.
+
+## Coverage
+
+Run coverage:
+
+```bash
+uv run pytest --cov=api_client_kit --cov-report=term-missing
+```
+
+Coverage configuration lives in:
+
+```text
+pyproject.toml
+```
+
+The v0.1.0 coverage target is at least:
+
+```text
+95%
+```
+
+Coverage should be meaningful. Do not add low-value tests only to satisfy a number.
+
+Important behavior should be tested directly.
+
+## CI Testing
+
+GitHub Actions runs CI on:
+
+* push to `main`
+* pull requests to `main`
+
+CI currently checks supported Python versions:
+
+```text
+3.10
+3.11
+3.12
+3.13
+```
+
+CI runs:
+
+```bash
+uv sync --extra dev
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest --cov=api_client_kit --cov-report=term-missing
+uv run python -m build
+```
+
+A change is not complete if CI fails.
+
+## Local Test Commands
+
+Standard test run:
+
+```bash
+uv run pytest
+```
+
+Coverage run:
+
+```bash
+uv run pytest --cov=api_client_kit --cov-report=term-missing
+```
+
+Full local check sequence:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+```
+
+Build-related check sequence:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+uv run pytest --cov=api_client_kit --cov-report=term-missing
+uv run python -m build
+uv run twine check dist/*
+```
+
+## pip-Compatible Test Workflow
+
+The package must remain pip-compatible.
+
+Use this workflow to verify tests outside `uv`:
+
+```bash
+deactivate 2>/dev/null || true
+rm -rf .venv
+
+python -m venv .venv
+source .venv/bin/activate
+
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+
+python -c "import api_client_kit; print(api_client_kit.__version__)"
+python -m pytest
+python -m ruff check .
+
+deactivate
+```
+
+Use:
+
+```bash
+python -m pytest
+```
+
+instead of bare:
+
+```bash
+pytest
+```
+
+to ensure tests run with the active virtual environment.
+
+## Test Naming
+
+Use clear test names that describe behavior.
+
+Good examples:
+
+```python
+def test_package_imports() -> None:
+    ...
+
+def test_redacts_authorization_header() -> None:
+    ...
+
+def test_retries_get_after_transient_server_error() -> None:
+    ...
+```
+
+Avoid vague names:
+
+```python
+def test_works() -> None:
+    ...
+
+def test_stuff() -> None:
+    ...
+```
+
+## Test File Naming
+
+Use explicit test file names:
+
+```text
+test_import_unit.py
+test_redaction_unit.py
+test_retry_policy_unit.py
+test_sync_client_integration.py
+```
+
+Prefer names that make the test category and subject clear.
+
+## Test Style
+
+Python test files should start with:
+
+```python
+from __future__ import annotations
+```
+
+Use type annotations for test functions:
+
+```python
+def test_example() -> None:
+    ...
+```
+
+Use plain `assert` statements.
+
+Do not import `pytest` unless the test file uses markers, fixtures, `pytest.raises`, parametrization, or other pytest features.
+
+## Determinism
+
+Tests should be deterministic.
+
+Avoid:
+
+* real sleeps
+* current wall-clock time unless injected
+* random values unless seeded
+* network calls
+* order-dependent global state
+* hidden environment dependencies
+
+Retry and backoff tests should use fake clocks or fake sleepers.
+
+## Future Test Helpers
+
+As the package grows, shared test helpers may be added for:
+
+* fake clocks
+* fake sleepers
+* `httpx.MockTransport` factories
+* reusable request/response builders
+* redaction assertions
+* hook recorders
+
+Keep test helpers small and explicit.
+
+## Before Committing
+
+Before committing test or runtime changes, run:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+```
+
+For coverage-sensitive changes, also run:
+
+```bash
+uv run pytest --cov=api_client_kit --cov-report=term-missing
+```
