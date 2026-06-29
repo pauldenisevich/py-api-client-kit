@@ -202,8 +202,8 @@ Expected output:
 
 ```text
 dist/
-  api_client_kit-<version>.tar.gz
   api_client_kit-<version>-py3-none-any.whl
+  api_client_kit-<version>.tar.gz
 ```
 
 Validate artifacts before upload:
