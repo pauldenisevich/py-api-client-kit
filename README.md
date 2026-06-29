@@ -14,32 +14,34 @@ The package is not a generated SDK framework. It is not a replacement for `httpx
 
 It is a client engineering kit: a small, composable infrastructure layer for the recurring concerns that appear in real API client development.
 
-## Current Development Status
-
-`api-client-kit` is currently in repository foundation work.
+## Status
 
 Current status:
 
 ```text
-private repository
-Sprint 1 foundation in progress
-package skeleton created
-runtime client implementation not started yet
+public repository
+package skeleton exists
+local development tooling exists
+CI exists
+runtime API client implementation not started yet
 not published to PyPI yet
 ```
 
-The current work focuses on:
+The package is not ready for production use.
 
-* repository structure
-* package skeleton
-* local development setup
-* documentation foundation
-* testing foundation
-* CI foundation
-* release process
-* public pre-launch readiness
+The first intended usable public release is:
 
-Runtime API client functionality will be implemented after the repository foundation is complete.
+```text
+api-client-kit==0.1.0
+```
+
+A possible placeholder package release may happen earlier as:
+
+```text
+api-client-kit==0.0.1
+```
+
+The purpose of `0.0.1` would be package-name reservation and transparent early project visibility, not production use.
 
 ## What Problem This Solves
 
@@ -88,7 +90,7 @@ build request
 → emit observability hooks
 ```
 
-The goal is to let developers write clean domain-specific endpoint methods while relying on tested infrastructure for the lower-level client behavior.
+The goal is to let developers write clean domain-specific endpoint methods while relying on tested infrastructure for lower-level client behavior.
 
 ## Planned Capabilities
 
@@ -106,12 +108,6 @@ The package is intended to provide reusable primitives for:
 * test-friendly API client development
 
 ## v0.1.0 Roadmap
-
-The first usable public release target is:
-
-```text
-api-client-kit==0.1.0
-```
 
 Planned v0.1.0 scope includes:
 
@@ -140,14 +136,6 @@ Planned v0.1.0 scope includes:
 * examples
 * public documentation
 * CI and release workflow
-
-A possible placeholder package release may happen earlier as:
-
-```text
-api-client-kit==0.0.1
-```
-
-The purpose of `0.0.1` would be package-name reservation and transparent early project visibility, not production use.
 
 ## Non-Goals
 
@@ -180,29 +168,28 @@ For `uv` users:
 uv add api-client-kit
 ```
 
+## Documentation
+
+Public documentation lives in [`docs/`](docs/).
+
+Start here:
+
+* [Project Positioning](docs/project-positioning.md)
+* [Architecture](docs/architecture.md)
+* [Local Development](docs/local-development.md)
+* [Testing](docs/testing.md)
+* [Security and Redaction](docs/security-and-redaction.md)
+* [Release Process](docs/release.md)
+
 ## Development
 
-This repository is `uv`-first and will remain pip-compatible.
+This repository is `uv`-first and remains pip-compatible.
 
-Expected local development workflow:
+For local setup, checks, testing, build commands, and contribution workflow, see:
 
-```bash
-uv sync --extra dev
-uv run pytest
-uv run ruff check .
-uv run ruff format --check .
-uv run python -m build
-```
-
-Pip-compatible workflow target:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-pytest
-ruff check .
-```
+* [Local Development](docs/local-development.md)
+* [Testing](docs/testing.md)
+* [Git Policy](docs/git-policy.md)
 
 ## Testing Policy
 
@@ -228,7 +215,7 @@ Supported Python versions for the first usable release:
 Python >=3.10
 ```
 
-Initial CI matrix target:
+CI target matrix:
 
 ```text
 3.10, 3.11, 3.12, 3.13
