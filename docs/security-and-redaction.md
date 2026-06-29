@@ -1,0 +1,391 @@
+# Security and Redaction
+
+This document defines the security and redaction principles for `api-client-kit`.
+
+`api-client-kit` is intended to help developers build API clients that may handle credentials, tokens, headers, request payloads, response payloads, and error context. Security and redaction are therefore core design concerns, not optional add-ons.
+
+The project is currently under active early development. Runtime redaction helpers and structured error handling will be implemented in later package work. This document defines the intended policy and design expectations.
+
+## Security Goals
+
+The package should help users build API clients that are:
+
+* safe around credentials
+* safe around logs and errors
+* testable without real secrets
+* explicit about sensitive data
+* predictable in failure modes
+* conservative about what gets exposed in diagnostics
+
+The package must avoid leaking credentials through:
+
+* exception messages
+* exception `repr`
+* logs
+* hook payloads
+* debug output
+* request context
+* response context
+* test fixtures
+* documentation examples
+
+## Sensitive Data
+
+Treat the following as sensitive by default:
+
+* `Authorization` headers
+* bearer tokens
+* API keys
+* refresh tokens
+* access tokens
+* cookies
+* session IDs
+* passwords
+* client secrets
+* private keys
+* PyPI tokens
+* GitHub tokens
+* query parameters containing secrets
+* payload fields containing secrets
+* customer data
+* sensitive request bodies
+* sensitive response bodies
+
+When uncertain, prefer redaction.
+
+## Header Redaction
+
+The package should redact sensitive headers before including request or response context in errors, logs, hooks, or diagnostics.
+
+Headers that should be redacted include:
+
+```text
+Authorization
+Proxy-Authorization
+Cookie
+Set-Cookie
+X-API-Key
+API-Key
+X-Auth-Token
+X-Access-Token
+```
+
+Example:
+
+```text
+Authorization: <redacted>
+X-API-Key: <redacted>
+```
+
+Header matching should be case-insensitive.
+
+## Query Parameter Redaction
+
+URLs may contain credentials or tokens in query parameters.
+
+The package should redact sensitive query parameters before including URLs in errors, logs, hooks, or diagnostics.
+
+Query parameters that should be redacted include:
+
+```text
+token
+access_token
+refresh_token
+api_key
+apikey
+key
+secret
+client_secret
+password
+session
+session_id
+auth
+authorization
+```
+
+Example:
+
+```text
+https://api.example.com/items?api_key=<redacted>&page=2
+```
+
+Non-sensitive query parameters may remain visible when useful for debugging.
+
+## Payload Redaction
+
+Request and response payloads may contain secrets or customer data.
+
+The package should provide best-effort recursive payload redaction for common structured payloads such as dictionaries and lists.
+
+Sensitive payload keys should include:
+
+```text
+token
+access_token
+refresh_token
+api_key
+apikey
+key
+secret
+client_secret
+password
+authorization
+cookie
+session
+session_id
+```
+
+Example input:
+
+```json
+{
+  "username": "alice",
+  "password": "real-password",
+  "metadata": {
+    "api_key": "real-key"
+  }
+}
+```
+
+Safe output:
+
+```json
+{
+  "username": "alice",
+  "password": "<redacted>",
+  "metadata": {
+    "api_key": "<redacted>"
+  }
+}
+```
+
+Redaction should preserve enough structure to make debugging useful without exposing secret values.
+
+## Body Snippets
+
+Errors may need to include a small response body snippet for debugging.
+
+Body snippets should be:
+
+* size-limited
+* redaction-aware
+* safe for string conversion
+* safe for exception messages
+* safe for logs
+* explicit about truncation when truncated
+
+Large payloads should never be included in full by default.
+
+Binary or non-text payloads should be represented safely.
+
+## Structured Errors
+
+Structured errors should include useful context without exposing secrets.
+
+Planned error context may include:
+
+* HTTP method
+* sanitized URL
+* sanitized request headers
+* response status code
+* sanitized response headers
+* safe response body snippet
+* retry attempt count
+* request ID or correlation ID if available
+* safe metadata
+
+Structured errors should not include:
+
+* raw authorization headers
+* raw cookies
+* raw API keys
+* raw tokens
+* unbounded request bodies
+* unbounded response bodies
+* private keys
+* credentials from environment variables
+
+## Logs
+
+Logs should follow the same redaction rules as errors.
+
+A logging hook should never log raw credentials.
+
+Safe logs may include:
+
+* method
+* sanitized URL
+* status code
+* elapsed time
+* retry attempt
+* sanitized error type
+* safe request ID
+* safe metadata
+
+Unsafe logs include:
+
+* raw `Authorization` headers
+* raw cookies
+* raw tokens
+* raw API keys
+* raw sensitive payload fields
+* full unbounded response bodies
+
+## Hooks
+
+Observability hooks should receive sanitized or explicitly safe context.
+
+Hook payloads should not become a path for secret leakage.
+
+If a hook receives raw context for advanced use cases, that behavior must be explicit, documented, and opt-in.
+
+Default hooks should be safe.
+
+## Tests
+
+Security and redaction behavior must be tested.
+
+Tests should verify that secrets do not appear in:
+
+* sanitized headers
+* sanitized URLs
+* sanitized payloads
+* exception strings
+* exception `repr`
+* logs
+* hook payloads
+* safe body snippets
+
+Tests must use fake secrets only.
+
+Good fake values:
+
+```text
+test-api-key
+test-token
+secret-value
+password-value
+```
+
+Never use real credentials in tests.
+
+## Documentation Examples
+
+Documentation examples must not contain real secrets.
+
+Use obvious placeholders:
+
+```text
+<api-key>
+<token>
+<redacted>
+test-api-key
+test-token
+```
+
+Do not include real service credentials, real tokens, private keys, screenshots containing secrets, or customer data.
+
+## Environment Files
+
+Do not commit real environment files.
+
+The repository may include:
+
+```text
+.env.example
+```
+
+The repository must not include:
+
+```text
+.env
+.env.local
+.env.production
+.env.* containing real secrets
+```
+
+`.env.example` should contain only safe placeholders.
+
+## Local Development
+
+Local development should not require real API credentials for tests.
+
+If future examples require credentials, they must be opt-in and clearly documented as external/manual examples.
+
+Automated tests must not depend on real external services or real API keys.
+
+## CI
+
+CI must not require real secrets for normal linting, formatting, tests, coverage, or package build checks.
+
+CI should run safely for pull requests.
+
+Release publishing may require trusted publishing or release-specific credentials, but those should be configured through GitHub/PyPI security mechanisms and must not be committed.
+
+## Dependency Policy
+
+Runtime dependencies should be minimal.
+
+Do not add security-sensitive dependencies casually.
+
+When adding dependencies that affect transport, auth, cryptography, logging, tracing, or serialization, review:
+
+* maintenance status
+* license
+* dependency tree
+* public API implications
+* security implications
+* testability
+
+## Reporting Vulnerabilities
+
+Do not report security vulnerabilities through public issues.
+
+Use the process documented in:
+
+```text
+SECURITY.md
+```
+
+Do not include real secrets, tokens, credentials, private keys, or customer data in public reports.
+
+## Implementation Expectations
+
+When implementing security or redaction functionality:
+
+* keep redaction helpers deterministic
+* test sensitive key matching
+* test case-insensitive header matching
+* test nested payload redaction
+* test URL query redaction
+* test exception string safety
+* test log safety
+* avoid global mutable redaction state unless explicitly justified
+* make defaults safe
+* document opt-in unsafe behavior clearly, if any exists
+
+## Non-Goals
+
+`api-client-kit` is not a credential vault.
+
+It should not store, rotate, encrypt, or manage secrets.
+
+It should help avoid accidental exposure of secrets while building API clients.
+
+Credential storage and secret management belong to dedicated secret-management systems.
+
+## Summary
+
+Security and redaction are core package responsibilities.
+
+The default behavior should be conservative:
+
+```text
+safe by default
+explicit when advanced behavior is needed
+no real secrets in tests
+no real secrets in docs
+no raw credentials in errors, logs, or hooks
+```
+
+When in doubt, redact.

@@ -50,12 +50,7 @@ The following public docs currently exist:
 * [Testing](testing.md) — documents pytest, unit/integration test categories, no-network policy, coverage, async tests, and CI testing behavior.
 * [Git Policy](git-policy.md) — documents branch model, commit message policy, local checks, push policy, versioning, and tags.
 * [Release Process](release.md) — documents version bumps, changelog updates, local checks, CI verification, tags, PyPI verification, and GitHub releases.
-
-## Planned Foundation Docs
-
-The following public docs are planned as part of the documentation foundation:
-
-* `security-and-redaction.md` — redaction principles and secret-safety policy.
+* [Security and Redaction](security-and-redaction.md) — documents secret-safety principles, redaction expectations, error/log/hook safety, and no-secret test policy.
 
 ## Planned Feature Docs
 
