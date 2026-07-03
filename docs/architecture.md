@@ -107,9 +107,23 @@ Sync and async clients should have equivalent behavior unless a difference is in
 
 The public client layer should be small and predictable. It should not hide complex behavior behind unclear global state.
 
-The `api_client_kit.client` subpackage currently provides early request and
-response models plus URL, header, and timeout utilities. It does not yet provide
-`SyncClient`, `AsyncClient`, or network behavior.
+Current implementation note:
+
+* `SyncClient` exists in `api_client_kit.client.sync_client`.
+* The `SyncClient` constructor supports `base_url`, `headers`, `timeout`, and
+  `transport`.
+* `base_url` is canonicalized and validated through `join_url`.
+* `headers` are stored as client default headers for future requests.
+* `timeout` is stored as the client default timeout.
+* `transport` can be injected as a seam for future local tests.
+* Request execution is not implemented yet.
+* Close and context manager behavior are not implemented yet.
+* Future auth, retry, rate-limit, and hooks constructor parameters are
+  intentionally deferred until their behavior is implemented.
+
+The `api_client_kit.client` subpackage currently provides `SyncClient`, early
+request and response models, plus URL, header, and timeout utilities. It does
+not yet provide `AsyncClient` or network behavior.
 
 ## Request Model Layer
 
@@ -163,8 +177,8 @@ Current implementation note:
 * Header merging and timeout resolution are implemented as separate utilities,
   but client execution remains later Sprint 2 work.
 
-`SyncClient` and `AsyncClient` do not use this helper yet because client
-execution has not been implemented.
+`SyncClient` uses this helper to canonicalize and validate its configured base
+URL. Request execution has not been implemented.
 
 ## Header Utilities
 
