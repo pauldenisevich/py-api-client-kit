@@ -107,7 +107,7 @@ Sync and async clients should have equivalent behavior unless a difference is in
 
 The public client layer should be small and predictable. It should not hide complex behavior behind unclear global state.
 
-The `api_client_kit.client` subpackage currently exists as an importable skeleton only. It does not yet provide `SyncClient`, `AsyncClient`, request models, response wrappers, URL joining, header merging, or network behavior.
+The `api_client_kit.client` subpackage currently provides early request and response models. It does not yet provide `SyncClient`, `AsyncClient`, URL joining, header merging, or network behavior.
 
 ## Request Model Layer
 
@@ -126,8 +126,8 @@ Current implementation note:
   `data`, `timeout`, `attempt`, `idempotency_key`, and `tags`.
 * `RequestContext.method` is normalized to uppercase, and `attempt` defaults to
   `1`.
-* URL joining, header merging, timeout normalization, response wrapping, and
-  client execution remain later Sprint 2 work.
+* URL joining, header merging, timeout normalization, and client execution
+  remain later Sprint 2 work.
 
 Planned concepts:
 
@@ -211,6 +211,18 @@ Retry behavior should be predictable and easy to inspect.
 ## Response and Decoding Layer
 
 The response layer should wrap raw `httpx` responses with package-level behavior.
+
+Current implementation note:
+
+* `ResponseData` exists as a lightweight wrapper around `httpx.Response`.
+* It stores the wrapped response as `raw`.
+* It exposes `status_code`, `headers`, `text`, `content`, and `json()`.
+* `status_code`, `headers`, `text`, and `content` delegate directly to the raw
+  response.
+* `.json()` delegates directly to `httpx.Response.json()`.
+* Custom decode errors are not implemented yet.
+* Structured errors, redaction, response body snippets, status-error raising,
+  and client execution remain later work.
 
 Planned concepts:
 

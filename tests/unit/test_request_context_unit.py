@@ -132,7 +132,7 @@ def test_request_context_is_not_in_models_all() -> None:
     import api_client_kit.client.models as models
 
     assert "RequestContext" not in models.__all__
-    assert models.__all__ == ("RequestOptions",)
+    assert models.__all__ == ("RequestOptions", "ResponseData")
 
 
 def test_request_context_is_not_exported_from_client_package() -> None:

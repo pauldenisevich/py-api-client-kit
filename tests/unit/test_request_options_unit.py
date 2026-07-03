@@ -110,4 +110,5 @@ def test_request_options_uses_slots_without_instance_dict() -> None:
 def test_request_options_is_in_models_all() -> None:
     import api_client_kit.client.models as models
 
-    assert models.__all__ == ("RequestOptions",)
+    assert "RequestOptions" in models.__all__
+    assert models.__all__ == ("RequestOptions", "ResponseData")

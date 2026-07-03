@@ -8,7 +8,7 @@ from typing import Any
 
 import httpx
 
-__all__ = ("RequestOptions",)
+__all__ = ("RequestOptions", "ResponseData")
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,3 +43,29 @@ class RequestContext:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "method", self.method.upper())
+
+
+@dataclass(frozen=True, slots=True)
+class ResponseData:
+    """Lightweight wrapper around an httpx response."""
+
+    raw: httpx.Response
+
+    @property
+    def status_code(self) -> int:
+        return self.raw.status_code
+
+    @property
+    def headers(self) -> httpx.Headers:
+        return self.raw.headers
+
+    @property
+    def text(self) -> str:
+        return self.raw.text
+
+    @property
+    def content(self) -> bytes:
+        return self.raw.content
+
+    def json(self) -> Any:
+        return self.raw.json()
