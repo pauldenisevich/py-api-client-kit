@@ -118,7 +118,14 @@ Current implementation note:
 * `RequestOptions` exists as the user-facing request options model.
 * Supported fields are `method`, `path`, `params`, `headers`, `json`, `data`,
   `timeout`, `idempotency_key`, and `tags`.
-* `RequestContext` remains an internal future model and is not implemented yet.
+* `RequestContext` now exists as the internal normalized request context for
+  the future client pipeline. It is importable from
+  `api_client_kit.client.models`, but it is not part of the public export
+  surface yet.
+* `RequestContext` supports `method`, `url`, `headers`, `params`, `json`,
+  `data`, `timeout`, `attempt`, `idempotency_key`, and `tags`.
+* `RequestContext.method` is normalized to uppercase, and `attempt` defaults to
+  `1`.
 * URL joining, header merging, timeout normalization, response wrapping, and
   client execution remain later Sprint 2 work.
 
