@@ -6,7 +6,6 @@ from types import ModuleType
 
 import pytest
 
-# ------------------------------------------------
 pytestmark = [pytest.mark.unit]
 
 CLIENT_MODULES = (
@@ -19,7 +18,6 @@ CLIENT_MODULES = (
 )
 
 
-# ------------------------------------------------
 @pytest.mark.parametrize("module_name", CLIENT_MODULES)
 def test_client_modules_import(module_name: str) -> None:
     module = importlib.import_module(module_name)
@@ -28,7 +26,6 @@ def test_client_modules_import(module_name: str) -> None:
     assert module.__name__ == module_name
 
 
-# ------------------------------------------------
 def test_top_level_package_import_and_version_remain_stable() -> None:
     import api_client_kit
 
