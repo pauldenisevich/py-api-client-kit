@@ -113,6 +113,15 @@ The `api_client_kit.client` subpackage currently exists as an importable skeleto
 
 The request model layer should define user-facing and internal request structures.
 
+Current implementation note:
+
+* `RequestOptions` exists as the user-facing request options model.
+* Supported fields are `method`, `path`, `params`, `headers`, `json`, `data`,
+  `timeout`, `idempotency_key`, and `tags`.
+* `RequestContext` remains an internal future model and is not implemented yet.
+* URL joining, header merging, timeout normalization, response wrapping, and
+  client execution remain later Sprint 2 work.
+
 Planned concepts:
 
 * request options model
