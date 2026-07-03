@@ -107,7 +107,9 @@ Sync and async clients should have equivalent behavior unless a difference is in
 
 The public client layer should be small and predictable. It should not hide complex behavior behind unclear global state.
 
-The `api_client_kit.client` subpackage currently provides early request and response models. It does not yet provide `SyncClient`, `AsyncClient`, URL joining, header merging, or network behavior.
+The `api_client_kit.client` subpackage currently provides early request and
+response models plus URL and header utilities. It does not yet provide
+`SyncClient`, `AsyncClient`, timeout normalization, or network behavior.
 
 ## Request Model Layer
 
@@ -160,6 +162,23 @@ Current implementation note:
 * The helper does not merge query params dictionaries.
 * Header merging, timeout normalization, and client execution remain later
   Sprint 2 work.
+
+`SyncClient` and `AsyncClient` do not use this helper yet because client
+execution has not been implemented.
+
+## Header Utilities
+
+Current implementation note:
+
+* `merge_headers` exists in `api_client_kit.client.headers`.
+* It applies client default headers first.
+* It applies request headers second, so request headers override defaults.
+* Header matching is case-insensitive through `httpx.Headers`.
+* Case-insensitive overrides do not preserve duplicate logical headers.
+* The helper returns a new `httpx.Headers` object.
+* The helper does not mutate input dictionaries or input `httpx.Headers`
+  objects.
+* Timeout normalization and client execution remain later Sprint 2 work.
 
 `SyncClient` and `AsyncClient` do not use this helper yet because client
 execution has not been implemented.
