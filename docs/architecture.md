@@ -13,8 +13,9 @@ Current status:
 ```text
 repository foundation complete
 package skeleton exists
+client subpackage skeleton exists
 tooling and CI exist
-runtime API client implementation not started yet
+runtime client behavior not implemented yet
 ```
 
 This document should be updated as the implementation becomes real.
@@ -105,6 +106,8 @@ The public client layer is expected to provide:
 Sync and async clients should have equivalent behavior unless a difference is intentional and documented.
 
 The public client layer should be small and predictable. It should not hide complex behavior behind unclear global state.
+
+The `api_client_kit.client` subpackage currently exists as an importable skeleton only. It does not yet provide `SyncClient`, `AsyncClient`, request models, response wrappers, URL joining, header merging, or network behavior.
 
 ## Request Model Layer
 
@@ -263,11 +266,18 @@ Hook payloads must follow the same redaction rules as errors and logs.
 
 ## Package Structure
 
-Current minimal package structure:
+Current implemented package structure:
 
 ```text
 api_client_kit/
   __init__.py
+  client/
+    __init__.py
+    models.py
+    sync_client.py
+    async_client.py
+    urls.py
+    headers.py
   py.typed
 
 tests/
@@ -275,12 +285,13 @@ tests/
   integration/
 ```
 
+The `api_client_kit/client/` modules are present so Sprint 2 work has stable module boundaries. They intentionally do not implement runtime client behavior yet.
+
 Expected future package structure may include modules such as:
 
 ```text
 api_client_kit/
   auth/
-  client/
   errors/
   hooks/
   pagination/
