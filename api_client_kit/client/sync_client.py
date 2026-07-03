@@ -103,3 +103,141 @@ class SyncClient:
         )
 
         return ResponseData(raw=response)
+
+    def get(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send a synchronous GET request."""
+        return self.request(
+            "GET",
+            path,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    def post(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        json: Any | None = None,
+        data: Any | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send a synchronous POST request."""
+        return self.request(
+            "POST",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    def put(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        json: Any | None = None,
+        data: Any | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send a synchronous PUT request."""
+        return self.request(
+            "PUT",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    def patch(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        json: Any | None = None,
+        data: Any | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send a synchronous PATCH request."""
+        return self.request(
+            "PATCH",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    def delete(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send a synchronous DELETE request."""
+        return self.request(
+            "DELETE",
+            path,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    def head(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send a synchronous HEAD request."""
+        return self.request(
+            "HEAD",
+            path,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )

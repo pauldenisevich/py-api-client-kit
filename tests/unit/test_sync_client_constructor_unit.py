@@ -156,14 +156,14 @@ def test_sync_client_is_not_exported_from_top_level_package() -> None:
     assert not hasattr(api_client_kit, "SyncClient")
 
 
-def test_sync_client_has_no_out_of_scope_runtime_methods() -> None:
+def test_sync_client_has_convenience_methods() -> None:
+    convenience_methods: tuple[str, ...] = ("get", "post", "put", "patch", "delete", "head")
+
+    assert all(callable(getattr(SyncClient, name)) for name in convenience_methods)
+
+
+def test_sync_client_still_has_no_close_or_context_manager_methods() -> None:
     out_of_scope_methods: tuple[str, ...] = (
-        "get",
-        "post",
-        "put",
-        "patch",
-        "delete",
-        "head",
         "close",
         "__enter__",
         "__exit__",

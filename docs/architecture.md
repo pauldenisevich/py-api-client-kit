@@ -129,9 +129,19 @@ Current implementation note:
 * `SyncClient.request()` returns `ResponseData`.
 * Non-2xx responses currently return `ResponseData` without structured package
   errors or status raising.
+* `SyncClient` provides synchronous convenience methods: `get`, `post`, `put`,
+  `patch`, `delete`, and `head`.
+* Each synchronous convenience method delegates to `SyncClient.request()`, so
+  request execution still uses the same URL joining, header merging, timeout
+  resolution, internal request context creation, transport call, and
+  `ResponseData` wrapping behavior.
+* `post`, `put`, and `patch` accept `json` and `data` payload arguments.
+* `get`, `delete`, and `head` cover normal params, headers, timeout,
+  idempotency metadata, and tags usage without body-specific convenience
+  parameters.
 * Structured errors are not implemented yet.
-* Retries, auth, rate limits, hooks, and redaction are not implemented yet.
-* Convenience methods are not implemented yet.
+* Retries, auth, rate limits, hooks, redaction, and pagination are not
+  implemented yet.
 * Close and context manager behavior are not implemented yet.
 * Future auth, retry, rate-limit, and hooks constructor parameters are
   intentionally deferred until their behavior is implemented.
