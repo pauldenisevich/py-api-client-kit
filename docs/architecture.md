@@ -126,8 +126,8 @@ Current implementation note:
   `data`, `timeout`, `attempt`, `idempotency_key`, and `tags`.
 * `RequestContext.method` is normalized to uppercase, and `attempt` defaults to
   `1`.
-* URL joining, header merging, timeout normalization, and client execution
-  remain later Sprint 2 work.
+* Header merging, timeout normalization, and client execution remain later
+  Sprint 2 work.
 
 Planned concepts:
 
@@ -143,6 +143,26 @@ Planned concepts:
 * user metadata or tags
 
 The request context should be the object passed through the pipeline.
+
+## URL Utilities
+
+Current implementation note:
+
+* `join_url` exists in `api_client_kit.client.urls`.
+* It joins configured API base URLs with request paths.
+* Leading request slashes do not reset or drop the configured base path, so a
+  base URL such as `https://api.example.com/v1` and a request path such as
+  `/users` produce `https://api.example.com/v1/users`.
+* Request-path query strings are preserved.
+* Base URLs must be absolute HTTP or HTTPS URLs.
+* Base URLs with query strings or fragments are rejected.
+* The helper does not send requests.
+* The helper does not merge query params dictionaries.
+* Header merging, timeout normalization, and client execution remain later
+  Sprint 2 work.
+
+`SyncClient` and `AsyncClient` do not use this helper yet because client
+execution has not been implemented.
 
 ## Auth Layer
 
