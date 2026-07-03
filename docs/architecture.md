@@ -108,8 +108,8 @@ Sync and async clients should have equivalent behavior unless a difference is in
 The public client layer should be small and predictable. It should not hide complex behavior behind unclear global state.
 
 The `api_client_kit.client` subpackage currently provides early request and
-response models plus URL and header utilities. It does not yet provide
-`SyncClient`, `AsyncClient`, timeout normalization, or network behavior.
+response models plus URL, header, and timeout utilities. It does not yet provide
+`SyncClient`, `AsyncClient`, or network behavior.
 
 ## Request Model Layer
 
@@ -128,8 +128,8 @@ Current implementation note:
   `data`, `timeout`, `attempt`, `idempotency_key`, and `tags`.
 * `RequestContext.method` is normalized to uppercase, and `attempt` defaults to
   `1`.
-* Header merging, timeout normalization, and client execution remain later
-  Sprint 2 work.
+* Header merging, timeout resolution, and URL joining are implemented as
+  separate utilities, but client execution remains later Sprint 2 work.
 
 Planned concepts:
 
@@ -160,8 +160,8 @@ Current implementation note:
 * Base URLs with query strings or fragments are rejected.
 * The helper does not send requests.
 * The helper does not merge query params dictionaries.
-* Header merging, timeout normalization, and client execution remain later
-  Sprint 2 work.
+* Header merging and timeout resolution are implemented as separate utilities,
+  but client execution remains later Sprint 2 work.
 
 `SyncClient` and `AsyncClient` do not use this helper yet because client
 execution has not been implemented.
@@ -178,7 +178,24 @@ Current implementation note:
 * The helper returns a new `httpx.Headers` object.
 * The helper does not mutate input dictionaries or input `httpx.Headers`
   objects.
-* Timeout normalization and client execution remain later Sprint 2 work.
+* Timeout resolution is implemented as a separate utility, but client execution
+  remains later Sprint 2 work.
+
+`SyncClient` and `AsyncClient` do not use this helper yet because client
+execution has not been implemented.
+
+## Timeout Utilities
+
+Current implementation note:
+
+* `resolve_timeout` exists in `api_client_kit.client.timeouts`.
+* It selects the effective request timeout.
+* Omitted per-request timeout values use the client default timeout.
+* Explicit per-request timeout values override the client default timeout.
+* Explicit per-request `None` is preserved and can override the client default.
+* `float`, `httpx.Timeout`, and `None` values are passed through as-is.
+* No custom timeout model exists yet.
+* Client execution does not exist yet.
 
 `SyncClient` and `AsyncClient` do not use this helper yet because client
 execution has not been implemented.
@@ -345,6 +362,7 @@ api_client_kit/
     async_client.py
     urls.py
     headers.py
+    timeouts.py
   py.typed
 
 tests/

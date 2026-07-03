@@ -15,6 +15,7 @@ CLIENT_MODULES = (
     "api_client_kit.client.async_client",
     "api_client_kit.client.urls",
     "api_client_kit.client.headers",
+    "api_client_kit.client.timeouts",
 )
 
 
