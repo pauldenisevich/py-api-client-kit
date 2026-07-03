@@ -158,7 +158,6 @@ def test_sync_client_is_not_exported_from_top_level_package() -> None:
 
 def test_sync_client_has_no_out_of_scope_runtime_methods() -> None:
     out_of_scope_methods: tuple[str, ...] = (
-        "request",
         "get",
         "post",
         "put",

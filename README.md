@@ -25,7 +25,7 @@ placeholder package published to PyPI
 package skeleton exists
 local development tooling exists
 CI exists
-runtime API client implementation not started yet
+early runtime client primitives are being implemented
 ````
 
 The current PyPI release is:

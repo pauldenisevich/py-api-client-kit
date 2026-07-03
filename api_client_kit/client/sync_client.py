@@ -3,13 +3,23 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Any, Final
 
 import httpx
 
-from api_client_kit.client.timeouts import TimeoutValue
+from api_client_kit.client.headers import merge_headers
+from api_client_kit.client.models import RequestContext, ResponseData
+from api_client_kit.client.timeouts import TimeoutValue, resolve_timeout
 from api_client_kit.client.urls import join_url
 
 __all__ = ("SyncClient",)
+
+
+class _RequestTimeoutUnset:
+    """Private sentinel type for omitted per-request timeout values."""
+
+
+_REQUEST_TIMEOUT_UNSET: Final = _RequestTimeoutUnset()
 
 
 class SyncClient:
@@ -43,3 +53,53 @@ class SyncClient:
     def timeout(self) -> TimeoutValue:
         """Configured default request timeout."""
         return self._timeout
+
+    def request(
+        self,
+        method: str,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        json: Any | None = None,
+        data: Any | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send a synchronous request."""
+        url = join_url(self._base_url, path)
+        merged_headers = merge_headers(self._default_headers, headers)
+
+        if timeout is _REQUEST_TIMEOUT_UNSET:
+            effective_timeout = resolve_timeout(default_timeout=self._timeout)
+        else:
+            effective_timeout = resolve_timeout(
+                default_timeout=self._timeout,
+                request_timeout=timeout,
+            )
+
+        context = RequestContext(
+            method=method,
+            url=url,
+            headers=merged_headers,
+            params=params,
+            json=json,
+            data=data,
+            timeout=effective_timeout,
+            attempt=1,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+        response = self._client.request(
+            method=context.method,
+            url=context.url,
+            params=context.params,
+            headers=context.headers,
+            json=context.json,
+            data=context.data,
+            timeout=context.timeout,
+        )
+
+        return ResponseData(raw=response)

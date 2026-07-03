@@ -15,7 +15,7 @@ repository foundation complete
 package skeleton exists
 client subpackage skeleton exists
 tooling and CI exist
-runtime client behavior not implemented yet
+first synchronous request execution path exists
 ```
 
 This document should be updated as the implementation becomes real.
@@ -115,15 +115,30 @@ Current implementation note:
 * `base_url` is canonicalized and validated through `join_url`.
 * `headers` are stored as client default headers for future requests.
 * `timeout` is stored as the client default timeout.
-* `transport` can be injected as a seam for future local tests.
-* Request execution is not implemented yet.
+* `transport` can be injected for local tests.
+* `SyncClient.request()` now exists as the first synchronous request execution
+  path.
+* `SyncClient.request()` joins the configured `base_url` and request path
+  through `join_url`.
+* `SyncClient.request()` merges default and request headers through
+  `merge_headers`.
+* `SyncClient.request()` resolves the client default timeout and per-request
+  timeout through `resolve_timeout`.
+* `SyncClient.request()` builds an internal `RequestContext`.
+* `SyncClient.request()` sends the request through the internal `httpx.Client`.
+* `SyncClient.request()` returns `ResponseData`.
+* Non-2xx responses currently return `ResponseData` without structured package
+  errors or status raising.
+* Structured errors are not implemented yet.
+* Retries, auth, rate limits, hooks, and redaction are not implemented yet.
+* Convenience methods are not implemented yet.
 * Close and context manager behavior are not implemented yet.
 * Future auth, retry, rate-limit, and hooks constructor parameters are
   intentionally deferred until their behavior is implemented.
 
 The `api_client_kit.client` subpackage currently provides `SyncClient`, early
 request and response models, plus URL, header, and timeout utilities. It does
-not yet provide `AsyncClient` or network behavior.
+not yet provide `AsyncClient`.
 
 ## Request Model Layer
 
@@ -143,7 +158,7 @@ Current implementation note:
 * `RequestContext.method` is normalized to uppercase, and `attempt` defaults to
   `1`.
 * Header merging, timeout resolution, and URL joining are implemented as
-  separate utilities, but client execution remains later Sprint 2 work.
+  separate utilities.
 
 Planned concepts:
 
@@ -174,11 +189,12 @@ Current implementation note:
 * Base URLs with query strings or fragments are rejected.
 * The helper does not send requests.
 * The helper does not merge query params dictionaries.
-* Header merging and timeout resolution are implemented as separate utilities,
-  but client execution remains later Sprint 2 work.
+* Header merging and timeout resolution are implemented as separate utilities.
 
 `SyncClient` uses this helper to canonicalize and validate its configured base
-URL. Request execution has not been implemented.
+URL. `SyncClient.request()` also uses this helper to join the configured base
+URL and per-request path. Leading request slashes preserve configured base path
+prefixes.
 
 ## Header Utilities
 
@@ -192,11 +208,11 @@ Current implementation note:
 * The helper returns a new `httpx.Headers` object.
 * The helper does not mutate input dictionaries or input `httpx.Headers`
   objects.
-* Timeout resolution is implemented as a separate utility, but client execution
-  remains later Sprint 2 work.
+* Timeout resolution is implemented as a separate utility.
 
-`SyncClient` and `AsyncClient` do not use this helper yet because client
-execution has not been implemented.
+`SyncClient.request()` uses this helper to merge client default headers with
+per-request headers before sending through `httpx.Client`. `AsyncClient` is not
+implemented yet.
 
 ## Timeout Utilities
 
@@ -209,10 +225,11 @@ Current implementation note:
 * Explicit per-request `None` is preserved and can override the client default.
 * `float`, `httpx.Timeout`, and `None` values are passed through as-is.
 * No custom timeout model exists yet.
-* Client execution does not exist yet.
 
-`SyncClient` and `AsyncClient` do not use this helper yet because client
-execution has not been implemented.
+`SyncClient.request()` uses this helper to select the effective timeout before
+sending through `httpx.Client`. Omitted request timeouts use the client default,
+while explicit per-request values, including `None`, override the default.
+`AsyncClient` is not implemented yet.
 
 ## Auth Layer
 
@@ -292,7 +309,7 @@ Current implementation note:
 * `.json()` delegates directly to `httpx.Response.json()`.
 * Custom decode errors are not implemented yet.
 * Structured errors, redaction, response body snippets, status-error raising,
-  and client execution remain later work.
+  and richer decoding behavior remain later work.
 
 Planned concepts:
 
