@@ -147,7 +147,21 @@ Current implementation note:
   parameters.
 * Request and convenience methods remain the synchronous request path, including
   when used inside a sync context manager.
-* `AsyncClient` is not implemented yet.
+* `AsyncClient` exists in `api_client_kit.client.async_client`.
+* The `AsyncClient` constructor supports `base_url`, `headers`, `timeout`, and
+  `transport`.
+* `AsyncClient` canonicalizes and validates `base_url` through `join_url`.
+* `AsyncClient` stores `headers` as async client default headers for future
+  requests.
+* `AsyncClient` stores `timeout` as the async client default timeout for future
+  requests.
+* `AsyncClient` accepts an injected `httpx.AsyncBaseTransport` as an async
+  transport seam.
+* `AsyncClient` creates an internal `httpx.AsyncClient`, but async request
+  execution is not implemented yet.
+* Async convenience methods are not implemented yet.
+* `AsyncClient.aclose()` and async context manager behavior are not implemented
+  yet.
 * Structured errors are not implemented yet.
 * Retries, auth, rate limits, hooks, redaction, and pagination are not
   implemented yet.
@@ -156,7 +170,7 @@ Current implementation note:
 
 The `api_client_kit.client` subpackage currently provides `SyncClient`, early
 request and response models, plus URL, header, and timeout utilities. It does
-not yet provide `AsyncClient`.
+not yet export `AsyncClient` from the package namespace.
 
 ## Request Model Layer
 
@@ -209,10 +223,10 @@ Current implementation note:
 * The helper does not merge query params dictionaries.
 * Header merging and timeout resolution are implemented as separate utilities.
 
-`SyncClient` uses this helper to canonicalize and validate its configured base
-URL. `SyncClient.request()` also uses this helper to join the configured base
-URL and per-request path. Leading request slashes preserve configured base path
-prefixes.
+`SyncClient` and `AsyncClient` use this helper to canonicalize and validate
+their configured base URL. `SyncClient.request()` also uses this helper to join
+the configured base URL and per-request path. Leading request slashes preserve
+configured base path prefixes.
 
 ## Header Utilities
 
@@ -229,7 +243,8 @@ Current implementation note:
 * Timeout resolution is implemented as a separate utility.
 
 `SyncClient.request()` uses this helper to merge client default headers with
-per-request headers before sending through `httpx.Client`. `AsyncClient` is not
+per-request headers before sending through `httpx.Client`. `AsyncClient` stores
+default headers for future request execution, but async request execution is not
 implemented yet.
 
 ## Timeout Utilities
@@ -247,7 +262,8 @@ Current implementation note:
 `SyncClient.request()` uses this helper to select the effective timeout before
 sending through `httpx.Client`. Omitted request timeouts use the client default,
 while explicit per-request values, including `None`, override the default.
-`AsyncClient` is not implemented yet.
+`AsyncClient` stores its default timeout for future request execution, but async
+request execution is not implemented yet.
 
 ## Auth Layer
 
