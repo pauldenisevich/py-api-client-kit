@@ -162,14 +162,14 @@ def test_sync_client_has_convenience_methods() -> None:
     assert all(callable(getattr(SyncClient, name)) for name in convenience_methods)
 
 
-def test_sync_client_still_has_no_close_or_context_manager_methods() -> None:
-    out_of_scope_methods: tuple[str, ...] = (
+def test_sync_client_has_lifecycle_methods() -> None:
+    lifecycle_methods: tuple[str, ...] = (
         "close",
         "__enter__",
         "__exit__",
     )
 
-    assert all(not hasattr(SyncClient, name) for name in out_of_scope_methods)
+    assert all(callable(getattr(SyncClient, name)) for name in lifecycle_methods)
 
 
 def test_sync_client_constructor_has_no_future_placeholder_parameters() -> None:

@@ -564,13 +564,93 @@ def test_tags_do_not_create_request_behavior() -> None:
     assert "tags" not in requests[0].headers
 
 
-def test_sync_client_still_has_no_close_method() -> None:
-    assert not hasattr(SyncClient, "close")
+def test_sync_client_close_exists() -> None:
+    assert callable(SyncClient.close)
 
 
-def test_sync_client_still_has_no_context_manager_behavior() -> None:
-    assert not hasattr(SyncClient, "__enter__")
-    assert not hasattr(SyncClient, "__exit__")
+def test_sync_client_close_closes_internal_httpx_client() -> None:
+    client = SyncClient(base_url="https://api.example.test")
+
+    result = client.close()
+
+    assert result is None
+    assert client._client.is_closed
+
+
+def test_sync_client_explicit_close_works() -> None:
+    client = SyncClient(base_url="https://api.example.test")
+
+    client.close()
+
+    assert client._client.is_closed
+
+
+def test_sync_client_double_close_does_not_crash() -> None:
+    client = SyncClient(base_url="https://api.example.test")
+
+    client.close()
+    client.close()
+
+    assert client._client.is_closed
+
+
+def test_sync_client_context_manager_returns_self_and_closes_after_block() -> None:
+    with SyncClient(base_url="https://api.example.test") as client:
+        assert isinstance(client, SyncClient)
+        assert client.__enter__() is client
+        assert not client._client.is_closed
+
+    assert client._client.is_closed
+
+
+def test_sync_client_enter_returns_self() -> None:
+    client = SyncClient(base_url="https://api.example.test")
+
+    assert client.__enter__() is client
+
+    client.close()
+
+
+def test_sync_client_context_manager_closes_when_block_raises() -> None:
+    client: SyncClient | None = None
+
+    def capture_and_raise(active_client: SyncClient) -> None:
+        nonlocal client
+        client = active_client
+        raise RuntimeError("boom")
+
+    with (
+        pytest.raises(RuntimeError, match="boom"),
+        SyncClient(
+            base_url="https://api.example.test",
+        ) as active_client,
+    ):
+        capture_and_raise(active_client)
+
+    assert client is not None
+    assert client._client.is_closed
+
+
+def test_sync_client_context_manager_does_not_suppress_exceptions() -> None:
+    with pytest.raises(RuntimeError, match="boom"), SyncClient(base_url="https://api.example.test"):
+        raise RuntimeError("boom")
+
+
+def test_sync_client_request_works_inside_context_manager() -> None:
+    with SyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, json={"ok": True})),
+    ) as client:
+        response = client.get("/status")
+
+    assert isinstance(response, ResponseData)
+    assert response.json() == {"ok": True}
+    assert client._client.is_closed
+
+
+def test_sync_client_still_has_no_async_behavior() -> None:
+    assert not hasattr(SyncClient, "__aenter__")
+    assert not hasattr(SyncClient, "__aexit__")
 
 
 def test_no_auth_retry_rate_limit_or_hooks_placeholder_parameters_exist() -> None:

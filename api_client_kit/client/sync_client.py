@@ -54,6 +54,23 @@ class SyncClient:
         """Configured default request timeout."""
         return self._timeout
 
+    def close(self) -> None:
+        """Close the underlying synchronous HTTP client."""
+        self._client.close()
+
+    def __enter__(self) -> SyncClient:
+        """Enter the synchronous client context manager."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: object | None,
+    ) -> None:
+        """Exit the synchronous client context manager."""
+        self.close()
+
     def request(
         self,
         method: str,

@@ -129,6 +129,12 @@ Current implementation note:
 * `SyncClient.request()` returns `ResponseData`.
 * Non-2xx responses currently return `ResponseData` without structured package
   errors or status raising.
+* `SyncClient.close()` exists and closes the underlying synchronous
+  `httpx.Client`.
+* `SyncClient` supports `with SyncClient(...) as client`.
+* The sync context manager returns the `SyncClient` instance from `__enter__`
+  and closes the underlying `httpx.Client` on exit.
+* Double-close is safe because close delegates to `httpx.Client.close()`.
 * `SyncClient` provides synchronous convenience methods: `get`, `post`, `put`,
   `patch`, `delete`, and `head`.
 * Each synchronous convenience method delegates to `SyncClient.request()`, so
@@ -139,10 +145,12 @@ Current implementation note:
 * `get`, `delete`, and `head` cover normal params, headers, timeout,
   idempotency metadata, and tags usage without body-specific convenience
   parameters.
+* Request and convenience methods remain the synchronous request path, including
+  when used inside a sync context manager.
+* `AsyncClient` is not implemented yet.
 * Structured errors are not implemented yet.
 * Retries, auth, rate limits, hooks, redaction, and pagination are not
   implemented yet.
-* Close and context manager behavior are not implemented yet.
 * Future auth, retry, rate-limit, and hooks constructor parameters are
   intentionally deferred until their behavior is implemented.
 
