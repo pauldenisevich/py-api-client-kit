@@ -202,10 +202,23 @@ Current implementation note:
 * Future auth, retry, rate-limit, and hooks constructor parameters are
   intentionally deferred until their behavior is implemented.
 
-The `api_client_kit.client` implementation modules currently define `SyncClient`,
-`AsyncClient`, early request and response models, plus URL, header, and timeout
-utilities. The `api_client_kit.client` and top-level `api_client_kit` package
-namespaces do not re-export these client classes yet.
+The `api_client_kit.client` subpackage now exports the stable Sprint 2 public
+client API:
+
+* `AsyncClient`
+* `RequestOptions`
+* `ResponseData`
+* `SyncClient`
+
+The `api_client_kit.client` implementation modules also define internal request
+context and utility helpers. `RequestContext` remains internal and is not
+exported from `api_client_kit.client`. URL, header, and timeout helpers such as
+`join_url`, `merge_headers`, and `resolve_timeout` remain module-level utilities
+and are not exported from `api_client_kit.client`.
+
+Top-level `api_client_kit` exports remain deferred to Task 2.6.2, so users
+should not rely on `from api_client_kit import SyncClient` or equivalent
+top-level client imports yet.
 
 ## Request Model Layer
 

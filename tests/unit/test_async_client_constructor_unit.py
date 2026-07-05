@@ -148,10 +148,10 @@ def test_async_client_does_not_configure_httpx_async_client_base_url_headers_or_
     assert client._client.timeout is not timeout
 
 
-def test_async_client_is_not_exported_from_client_package() -> None:
+def test_async_client_is_exported_from_client_package() -> None:
     import api_client_kit.client as client
 
-    assert not hasattr(client, "AsyncClient")
+    assert client.AsyncClient is AsyncClient
 
 
 def test_async_client_is_not_exported_from_top_level_package() -> None:

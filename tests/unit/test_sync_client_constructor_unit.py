@@ -144,10 +144,10 @@ def test_sync_client_does_not_configure_httpx_client_base_url_headers_or_timeout
     assert client._client.timeout is not timeout
 
 
-def test_sync_client_is_not_exported_from_client_package() -> None:
+def test_sync_client_is_exported_from_client_package() -> None:
     import api_client_kit.client as client
 
-    assert not hasattr(client, "SyncClient")
+    assert client.SyncClient is SyncClient
 
 
 def test_sync_client_is_not_exported_from_top_level_package() -> None:

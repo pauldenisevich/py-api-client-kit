@@ -80,10 +80,10 @@ def test_request_context_remains_excluded_from_models_all() -> None:
     assert "RequestContext" not in models.__all__
 
 
-def test_response_data_is_not_exported_from_client_package() -> None:
+def test_response_data_is_exported_from_client_package() -> None:
     import api_client_kit.client as client
 
-    assert not hasattr(client, "ResponseData")
+    assert client.ResponseData is ResponseData
 
 
 def test_response_data_is_not_exported_from_top_level_package() -> None:
