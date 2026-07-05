@@ -150,10 +150,10 @@ def test_sync_client_is_exported_from_client_package() -> None:
     assert client.SyncClient is SyncClient
 
 
-def test_sync_client_is_not_exported_from_top_level_package() -> None:
+def test_sync_client_is_exported_from_top_level_package() -> None:
     import api_client_kit
 
-    assert not hasattr(api_client_kit, "SyncClient")
+    assert api_client_kit.SyncClient is SyncClient
 
 
 def test_sync_client_has_convenience_methods() -> None:

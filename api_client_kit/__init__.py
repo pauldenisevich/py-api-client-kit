@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+from api_client_kit.client import AsyncClient, RequestOptions, ResponseData, SyncClient
+
 __version__ = "0.0.1"
 
-__all__ = ["__version__"]
+__all__ = (
+    "AsyncClient",
+    "RequestOptions",
+    "ResponseData",
+    "SyncClient",
+    "__version__",
+)

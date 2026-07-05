@@ -86,7 +86,7 @@ def test_response_data_is_exported_from_client_package() -> None:
     assert client.ResponseData is ResponseData
 
 
-def test_response_data_is_not_exported_from_top_level_package() -> None:
+def test_response_data_is_exported_from_top_level_package() -> None:
     import api_client_kit
 
-    assert not hasattr(api_client_kit, "ResponseData")
+    assert api_client_kit.ResponseData is ResponseData

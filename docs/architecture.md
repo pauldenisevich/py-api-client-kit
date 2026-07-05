@@ -202,7 +202,7 @@ Current implementation note:
 * Future auth, retry, rate-limit, and hooks constructor parameters are
   intentionally deferred until their behavior is implemented.
 
-The `api_client_kit.client` subpackage now exports the stable Sprint 2 public
+The `api_client_kit.client` subpackage now exports the stable public
 client API:
 
 * `AsyncClient`
@@ -210,15 +210,21 @@ client API:
 * `ResponseData`
 * `SyncClient`
 
+Top-level `api_client_kit` also exports the stable public client API
+and version value:
+
+* `AsyncClient`
+* `RequestOptions`
+* `ResponseData`
+* `SyncClient`
+* `__version__`
+
 The `api_client_kit.client` implementation modules also define internal request
 context and utility helpers. `RequestContext` remains internal and is not
-exported from `api_client_kit.client`. URL, header, and timeout helpers such as
-`join_url`, `merge_headers`, and `resolve_timeout` remain module-level utilities
-and are not exported from `api_client_kit.client`.
-
-Top-level `api_client_kit` exports remain deferred to Task 2.6.2, so users
-should not rely on `from api_client_kit import SyncClient` or equivalent
-top-level client imports yet.
+exported from top-level `api_client_kit` or `api_client_kit.client`. URL,
+header, and timeout helpers such as `join_url`, `merge_headers`, and
+`resolve_timeout` remain module-level utilities and are not top-level exports or
+client subpackage exports.
 
 ## Request Model Layer
 
@@ -483,7 +489,7 @@ tests/
   integration/
 ```
 
-The `api_client_kit/client/` modules are present so Sprint 2 work has stable module boundaries. They intentionally do not implement runtime client behavior yet.
+The `api_client_kit/client/` modules are present so work has stable module boundaries. They intentionally do not implement runtime client behavior yet.
 
 Expected future package structure may include modules such as:
 
