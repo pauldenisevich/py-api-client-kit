@@ -162,7 +162,6 @@ def test_async_client_is_not_exported_from_top_level_package() -> None:
 
 def test_async_client_has_no_async_request_convenience_or_lifecycle_methods() -> None:
     deferred_methods: tuple[str, ...] = (
-        "request",
         "get",
         "post",
         "put",

@@ -16,6 +16,7 @@ package skeleton exists
 client subpackage skeleton exists
 tooling and CI exist
 first synchronous request execution path exists
+first asynchronous request execution path exists
 ```
 
 This document should be updated as the implementation becomes real.
@@ -151,14 +152,26 @@ Current implementation note:
 * The `AsyncClient` constructor supports `base_url`, `headers`, `timeout`, and
   `transport`.
 * `AsyncClient` canonicalizes and validates `base_url` through `join_url`.
-* `AsyncClient` stores `headers` as async client default headers for future
-  requests.
-* `AsyncClient` stores `timeout` as the async client default timeout for future
+* `AsyncClient` stores `headers` as async client default headers for requests.
+* `AsyncClient` stores `timeout` as the async client default timeout for
   requests.
 * `AsyncClient` accepts an injected `httpx.AsyncBaseTransport` as an async
   transport seam.
-* `AsyncClient` creates an internal `httpx.AsyncClient`, but async request
-  execution is not implemented yet.
+* `AsyncClient` creates an internal `httpx.AsyncClient`.
+* `AsyncClient.request()` now exists as the first asynchronous request
+  execution path.
+* `AsyncClient.request()` joins the configured `base_url` and request path
+  through `join_url`.
+* `AsyncClient.request()` merges default and request headers through
+  `merge_headers`.
+* `AsyncClient.request()` resolves the async client default timeout and
+  per-request timeout through `resolve_timeout`.
+* `AsyncClient.request()` builds an internal `RequestContext`.
+* `AsyncClient.request()` sends the request through the internal
+  `httpx.AsyncClient`.
+* `AsyncClient.request()` returns `ResponseData`.
+* Non-2xx async responses currently return `ResponseData` without structured
+  package errors or status raising.
 * Async convenience methods are not implemented yet.
 * `AsyncClient.aclose()` and async context manager behavior are not implemented
   yet.
@@ -224,9 +237,9 @@ Current implementation note:
 * Header merging and timeout resolution are implemented as separate utilities.
 
 `SyncClient` and `AsyncClient` use this helper to canonicalize and validate
-their configured base URL. `SyncClient.request()` also uses this helper to join
-the configured base URL and per-request path. Leading request slashes preserve
-configured base path prefixes.
+their configured base URL. `SyncClient.request()` and `AsyncClient.request()`
+also use this helper to join the configured base URL and per-request path.
+Leading request slashes preserve configured base path prefixes.
 
 ## Header Utilities
 
@@ -243,9 +256,9 @@ Current implementation note:
 * Timeout resolution is implemented as a separate utility.
 
 `SyncClient.request()` uses this helper to merge client default headers with
-per-request headers before sending through `httpx.Client`. `AsyncClient` stores
-default headers for future request execution, but async request execution is not
-implemented yet.
+per-request headers before sending through `httpx.Client`.
+`AsyncClient.request()` uses this helper to merge async client default headers
+with per-request headers before sending through `httpx.AsyncClient`.
 
 ## Timeout Utilities
 
@@ -260,10 +273,10 @@ Current implementation note:
 * No custom timeout model exists yet.
 
 `SyncClient.request()` uses this helper to select the effective timeout before
-sending through `httpx.Client`. Omitted request timeouts use the client default,
-while explicit per-request values, including `None`, override the default.
-`AsyncClient` stores its default timeout for future request execution, but async
-request execution is not implemented yet.
+sending through `httpx.Client`. `AsyncClient.request()` uses the same helper to
+select the effective timeout before sending through `httpx.AsyncClient`.
+Omitted request timeouts use the client default, while explicit per-request
+values, including `None`, override the default.
 
 ## Auth Layer
 
