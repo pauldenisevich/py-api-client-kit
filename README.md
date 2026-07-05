@@ -37,6 +37,8 @@ from api_client_kit import AsyncClient, RequestOptions, ResponseData, SyncClient
 
 The top-level package namespace is the primary public import surface.
 
+See [Client Usage](docs/client.md) for basic sync, async, and testing examples.
+
 The package remains work in progress and is not ready for production use.
 
 The current PyPI release is:
@@ -195,6 +197,7 @@ Public documentation lives in [`docs/`](docs/).
 Start here:
 
 * [Project Positioning](docs/project-positioning.md)
+* [Client Usage](docs/client.md)
 * [Architecture](docs/architecture.md)
 * [Local Development](docs/local-development.md)
 * [Testing](docs/testing.md)

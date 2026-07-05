@@ -12,6 +12,7 @@ For a high-level explanation of the project, start with:
 
 For architecture and development workflow, see:
 
+* [Client Usage](client.md)
 * [Architecture](architecture.md)
 * [Local Development](local-development.md)
 
@@ -46,7 +47,8 @@ api-client-kit==0.1.0
 The following public docs currently exist:
 
 * [Project Positioning](project-positioning.md) — explains what the package is, who it is for, and how it differs from raw `httpx`, SDK generators, and retry-only helpers.
-* [Architecture](architecture.md) — describes the intended package architecture, request pipeline, layers, and design boundaries.
+* [Client Usage](client.md) — shows basic sync client usage, async client usage, `httpx.MockTransport` testing guidance, and current limitations.
+* [Architecture](architecture.md) — describes the current package architecture, request pipeline, layers, future feature areas, and design boundaries.
 * [Local Development](local-development.md) — explains devcontainer setup, `uv`, pip-compatible workflow, checks, pre-commit, and package builds.
 * [Testing](testing.md) — documents pytest, unit/integration test categories, no-network policy, coverage, async tests, and CI testing behavior.
 * [Git Policy](git-policy.md) — documents branch model, commit message policy, local checks, push policy, versioning, and tags.
