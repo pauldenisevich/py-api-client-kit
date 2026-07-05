@@ -50,7 +50,7 @@ The following public docs currently exist:
 * [Client Usage](client.md) — shows basic sync client usage, async client usage, `httpx.MockTransport` testing guidance, and current limitations.
 * [Architecture](architecture.md) — describes the current package architecture, request pipeline, layers, future feature areas, and design boundaries.
 * [Local Development](local-development.md) — explains devcontainer setup, `uv`, pip-compatible workflow, checks, pre-commit, and package builds.
-* [Testing](testing.md) — documents pytest, unit/integration test categories, no-network policy, coverage, async tests, and CI testing behavior.
+* [Testing](testing.md) — documents pytest, unit/integration test categories, no-network policy, `httpx.MockTransport` client testing, coverage, async tests, and CI testing behavior.
 * [Git Policy](git-policy.md) — documents branch model, commit message policy, local checks, push policy, versioning, and tags.
 * [Release Process](release.md) — documents version bumps, changelog updates, local checks, CI verification, tags, PyPI verification, and GitHub releases.
 * [Security and Redaction](security-and-redaction.md) — documents secret-safety principles, redaction expectations, error/log/hook safety, and no-secret test policy.

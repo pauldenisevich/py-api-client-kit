@@ -8,7 +8,9 @@ The project uses `pytest` and is designed to be tested without real external API
 
 `api-client-kit` is currently under active early development.
 
-The current test suite contains the initial package import smoke test. As runtime functionality is added, every feature should include focused tests.
+The current test suite covers imports, request and response models, URL joining,
+header merging, timeout resolution, and sync/async client foundations. As
+runtime functionality is added, every feature should include focused tests.
 
 ## Test Goals
 
@@ -71,13 +73,13 @@ Unit tests should cover isolated behavior such as:
 * URL joining
 * header merging
 * request option defaults
-* redaction helpers
-* error mapping
-* retry decisions
-* backoff calculations
-* `Retry-After` parsing
-* pagination parsing
-* hook context construction
+* request context normalization
+* response wrapper accessors
+* timeout resolution
+
+Future feature areas such as auth, retries, rate limits, structured errors,
+redaction, pagination, and observability should receive dedicated tests when
+they are implemented.
 
 Unit tests should be fast, deterministic, and independent of external services.
 
@@ -101,11 +103,83 @@ Examples of integration-style behavior:
 
 * sync client request flow
 * async client request flow
-* auth injection through the client
-* retry loop behavior
-* structured error raising
-* pagination iteration
-* hook call ordering
+* request construction through the client
+* response wrapping
+* client lifecycle behavior
+
+## Client Transport Testing
+
+`SyncClient` and `AsyncClient` accept injected `httpx` transports. Client
+transport tests should inject `httpx.MockTransport` to verify request behavior
+without real network calls.
+
+Use these tests to assert request construction and response wrapping. Useful
+assertions include:
+
+* HTTP method
+* joined URL and path
+* query parameters
+* headers
+* JSON or data body
+* timeout behavior where applicable
+* `ResponseData` wrapping
+* lifecycle behavior where applicable
+
+Sync example:
+
+```python
+import httpx
+
+from api_client_kit import SyncClient
+
+
+def handler(request: httpx.Request) -> httpx.Response:
+    assert request.method == "GET"
+    assert request.url.path == "/users"
+    return httpx.Response(200, json={"items": []})
+
+
+def test_sync_client_with_mock_transport() -> None:
+    with SyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        response = client.get("/users")
+
+    assert response.json() == {"items": []}
+```
+
+Async tests should use `pytest.mark.asyncio`:
+
+```python
+import httpx
+import pytest
+
+from api_client_kit import AsyncClient
+
+
+@pytest.mark.asyncio
+async def test_async_client_with_mock_transport() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "GET"
+        assert request.url.path == "/status"
+        return httpx.Response(200, json={"ok": True})
+
+    async with AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        response = await client.get("/status")
+
+    assert response.json() == {"ok": True}
+```
+
+These examples are documentation examples, not doctests.
+
+Real external API calls, real credentials, and network-dependent tests are not
+allowed. Future feature areas such as auth, retries, rate limits, structured
+errors, redaction, pagination, and observability should receive dedicated tests
+when they are implemented.
 
 ## No Real Network Calls
 
