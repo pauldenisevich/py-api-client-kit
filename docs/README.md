@@ -28,8 +28,9 @@ Current status:
 package skeleton exists
 local development tooling exists
 CI exists
-runtime API client implementation not started yet
-not published to PyPI yet
+core sync/async client foundation is available
+public client imports are available
+placeholder package published to PyPI
 ```
 
 The package is not ready for production use.

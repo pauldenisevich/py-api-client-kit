@@ -2,9 +2,13 @@
 
 `api-client-kit` is an opinionated Python toolkit for building robust API clients.
 
-This document describes the intended package architecture and request pipeline.
+This document describes the current package architecture, public API surface,
+internal implementation boundaries, and planned future feature areas.
 
-The project is currently in early development. Some architecture described here is planned for the first usable public release and may not be implemented yet.
+The project is currently in early development. The core sync/async client
+foundation is implemented, while production-oriented behaviors such as auth,
+retries, structured errors, redaction, rate-limit handling, pagination, and
+observability hooks remain future feature areas.
 
 ## Status
 
@@ -12,16 +16,15 @@ Current status:
 
 ```text
 repository foundation complete
-package skeleton exists
-client subpackage skeleton exists
 tooling and CI exist
-first synchronous request execution path exists
-first asynchronous request execution path exists
-async convenience methods exist
-async client lifecycle support exists
+core request and response models exist
+URL, header, and timeout request construction utilities exist
+synchronous request execution path exists
+asynchronous request execution path exists
+sync and async convenience methods exist
+sync and async client lifecycle support exists
+top-level and client subpackage public imports exist
 ```
-
-This document should be updated as the implementation becomes real.
 
 ## Architectural Goal
 
@@ -65,22 +68,28 @@ The pipeline should be explicit, testable, and safe by default.
 
 ## Main Layers
 
-The intended architecture has these layers:
+The implemented core runtime foundation currently has these layers:
 
 ```text
 public client API
   ↓
 request options and request context
   ↓
+request construction utilities
+  ↓
+transport execution through httpx
+  ↓
+response wrapper
+```
+
+Future production-oriented feature areas include:
+
+```text
 auth providers
   ↓
 rate-limit policy
   ↓
-transport execution through httpx
-  ↓
 retry policy and backoff
-  ↓
-response wrapper and decoding
   ↓
 structured errors and redaction
   ↓
@@ -89,11 +98,12 @@ pagination helpers
 observability hooks
 ```
 
-Not every layer is implemented yet.
+The current client foundation is intentionally small. Future feature areas
+should be documented as available only after they are implemented and tested.
 
 ## Public Client Layer
 
-The public client layer is expected to provide:
+The public client layer provides:
 
 * `SyncClient`
 * `AsyncClient`
@@ -196,11 +206,11 @@ Current implementation note:
   package errors or status raising.
 * Request and convenience methods remain the asynchronous request path,
   including when used inside an async context manager.
-* Structured errors are not implemented yet.
-* Retries, auth, rate limits, hooks, logging, redaction, and pagination are not
-  implemented yet.
-* Future auth, retry, rate-limit, and hooks constructor parameters are
-  intentionally deferred until their behavior is implemented.
+* Structured errors remain a future feature area.
+* Retries, auth, rate limits, hooks, logging, redaction, and pagination remain
+  future feature areas.
+* Auth, retry, rate-limit, and hooks constructor parameters are intentionally
+  absent until their behavior is implemented.
 
 The `api_client_kit.client` subpackage now exports the stable public
 client API:
@@ -228,17 +238,16 @@ client subpackage exports.
 
 ## Request Model Layer
 
-The request model layer should define user-facing and internal request structures.
+The request model layer defines user-facing and internal request structures.
 
 Current implementation note:
 
 * `RequestOptions` exists as the user-facing request options model.
 * Supported fields are `method`, `path`, `params`, `headers`, `json`, `data`,
   `timeout`, `idempotency_key`, and `tags`.
-* `RequestContext` now exists as the internal normalized request context for
-  the future client pipeline. It is importable from
-  `api_client_kit.client.models`, but it is not part of the public export
-  surface yet.
+* `RequestContext` exists as the internal normalized request context for the
+  client pipeline. It is importable from `api_client_kit.client.models`, but it
+  is not part of the public export surface.
 * `RequestContext` supports `method`, `url`, `headers`, `params`, `json`,
   `data`, `timeout`, `attempt`, `idempotency_key`, and `tags`.
 * `RequestContext.method` is normalized to uppercase, and `attempt` defaults to
@@ -246,20 +255,12 @@ Current implementation note:
 * Header merging, timeout resolution, and URL joining are implemented as
   separate utilities.
 
-Planned concepts:
+`RequestOptions` and `ResponseData` are part of the public API surface.
+`RequestContext` is internal pipeline state and remains outside the top-level
+and client subpackage export surfaces.
 
-* request options model
-* internal request context
-* normalized method
-* resolved URL
-* merged headers
-* query parameters
-* request body
-* timeout
-* idempotency metadata
-* user metadata or tags
-
-The request context should be the object passed through the pipeline.
+The internal request context is the object used by the current sync and async
+request paths after URL joining, header merging, and timeout resolution.
 
 ## URL Utilities
 
@@ -319,9 +320,10 @@ select the effective timeout before sending through `httpx.AsyncClient`.
 Omitted request timeouts use the client default, while explicit per-request
 values, including `None`, override the default.
 
-## Auth Layer
+## Future Auth Layer
 
-The auth layer should allow request authentication to be composed and tested.
+The future auth layer should allow request authentication to be composed and
+tested.
 
 Planned concepts:
 
@@ -331,13 +333,15 @@ Planned concepts:
 * bearer token auth
 * composite auth
 
-Auth providers should modify request context before transport execution.
+Auth providers should modify request context before transport execution once
+auth support exists.
 
 Secrets must not leak into errors, logs, hook payloads, or diagnostics.
 
-## Rate-Limit Layer
+## Future Rate-Limit Layer
 
-The rate-limit layer should provide a standard seam before request execution.
+The future rate-limit layer should provide a standard extension point before
+request execution.
 
 Planned concepts:
 
@@ -345,26 +349,28 @@ Planned concepts:
 * no-op rate limiter
 * future concrete rate-limit implementations
 
-For v0.1.0, the rate-limit layer is expected to be intentionally small. More advanced rate limiting can be added later.
+The rate-limit layer is not part of the current implemented foundation. More
+advanced rate limiting can be added later.
 
 ## Transport Layer
 
 `api-client-kit` uses `httpx` as the HTTP engine.
 
-The transport layer should handle actual request execution through:
+The current transport layer handles request execution through:
 
-* `httpx.Client`
-* `httpx.AsyncClient`
-* injectable transports for tests
+* `httpx.Client` in `SyncClient`
+* `httpx.AsyncClient` in `AsyncClient`
+* injectable sync and async transports for tests
 * `httpx.MockTransport` in integration-style tests
 
 The package should not replace `httpx`.
 
 Instead, it should build API-client infrastructure around it.
 
-## Retry and Backoff Layer
+## Future Retry and Backoff Layer
 
-The retry layer should make transient failure handling deterministic and testable.
+The future retry layer should make transient failure handling deterministic and
+testable.
 
 Planned concepts:
 
@@ -381,7 +387,8 @@ Planned concepts:
 
 Tests must not use real sleeps.
 
-Retry behavior should be predictable and easy to inspect.
+Retry behavior is not part of the current implemented foundation. When added,
+it should be predictable and easy to inspect.
 
 ## Response and Decoding Layer
 
@@ -395,25 +402,15 @@ Current implementation note:
 * `status_code`, `headers`, `text`, and `content` delegate directly to the raw
   response.
 * `.json()` delegates directly to `httpx.Response.json()`.
-* Custom decode errors are not implemented yet.
+* Custom decode errors remain a future feature area.
 * Structured errors, redaction, response body snippets, status-error raising,
-  and richer decoding behavior remain later work.
-
-Planned concepts:
-
-* response wrapper
-* status code access
-* response headers
-* raw response access
-* text/body access
-* JSON helper
-* decode error handling
+  and richer decoding behavior remain future feature areas.
 
 Detailed decoding behavior should be documented once implemented.
 
-## Error and Redaction Layer
+## Future Error and Redaction Layer
 
-Errors should be structured, useful, and safe.
+Future package errors should be structured, useful, and safe.
 
 Planned concepts:
 
@@ -429,13 +426,15 @@ Planned concepts:
 * safe body snippets
 * recursive payload redaction helpers
 
-Error messages and representations must not leak credentials.
+Error messages and representations must not leak credentials once structured
+package errors and diagnostics exist.
 
-Redaction is part of the architecture, not an afterthought.
+Redaction is part of the future architecture, not an afterthought.
 
-## Pagination Layer
+## Future Pagination Layer
 
-The pagination layer should provide reusable helpers for common API pagination patterns.
+The future pagination layer should provide reusable helpers for common API
+pagination patterns.
 
 Planned concepts:
 
@@ -447,11 +446,13 @@ Planned concepts:
 * sync iteration helpers
 * async iteration helpers
 
-Pagination helpers should avoid hard-coding one vendor’s response shape into the core.
+Pagination helpers should avoid hard-coding one vendor's response shape into the
+core.
 
-## Observability Layer
+## Future Observability Layer
 
-The observability layer should let users inspect client behavior without coupling the package to a specific metrics, logging, or tracing system.
+The future observability layer should let users inspect client behavior without
+coupling the package to a specific metrics, logging, or tracing system.
 
 Planned concepts:
 
@@ -465,7 +466,8 @@ Planned concepts:
 * rate-limit wait events
 * redaction-safe logging hooks
 
-Hook payloads must follow the same redaction rules as errors and logs.
+Hook payloads must follow the same redaction rules as errors and logs once hooks
+exist.
 
 ## Package Structure
 
@@ -489,9 +491,10 @@ tests/
   integration/
 ```
 
-The `api_client_kit/client/` modules are present so work has stable module boundaries. They intentionally do not implement runtime client behavior yet.
+The `api_client_kit/client/` modules contain the implemented core runtime client
+foundation and supporting request construction utilities.
 
-Expected future package structure may include modules such as:
+Future package structure may include modules such as:
 
 ```text
 api_client_kit/
@@ -505,7 +508,7 @@ api_client_kit/
   transport/
 ```
 
-The exact structure may evolve as implementation begins.
+The exact structure may evolve as those feature areas are implemented.
 
 Public exports should be intentional and documented.
 
@@ -555,9 +558,19 @@ Do not add runtime dependencies casually. Every runtime dependency increases the
 
 Sync and async clients should share the same conceptual behavior.
 
-Parity should apply to:
+Current sync and async parity applies to:
 
 * request construction
+* base URL handling
+* default and per-request header handling
+* default and per-request timeout handling
+* request execution through `httpx`
+* convenience methods
+* response wrapping
+* lifecycle support
+
+Future sync and async parity should also apply to:
+
 * auth behavior
 * retry behavior
 * rate-limit behavior
