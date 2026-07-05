@@ -54,6 +54,23 @@ class AsyncClient:
         """Configured default request timeout."""
         return self._timeout
 
+    async def aclose(self) -> None:
+        """Close the underlying asynchronous HTTP client."""
+        await self._client.aclose()
+
+    async def __aenter__(self) -> AsyncClient:
+        """Enter the asynchronous client context manager."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: object | None,
+    ) -> None:
+        """Exit the asynchronous client context manager."""
+        await self.aclose()
+
     async def request(
         self,
         method: str,

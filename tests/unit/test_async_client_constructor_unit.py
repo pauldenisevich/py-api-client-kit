@@ -166,15 +166,14 @@ def test_async_client_has_convenience_methods() -> None:
     assert all(callable(getattr(AsyncClient, name)) for name in convenience_methods)
 
 
-def test_async_client_has_no_async_lifecycle_methods() -> None:
-    deferred_methods: tuple[str, ...] = (
+def test_async_client_has_async_lifecycle_methods() -> None:
+    lifecycle_methods: tuple[str, ...] = (
         "aclose",
         "__aenter__",
         "__aexit__",
     )
 
-    for name in deferred_methods:
-        assert not hasattr(AsyncClient, name)
+    assert all(callable(getattr(AsyncClient, name)) for name in lifecycle_methods)
 
 
 def test_async_client_constructor_has_no_future_placeholder_parameters() -> None:

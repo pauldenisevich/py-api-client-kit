@@ -647,14 +647,101 @@ async def test_tags_do_not_create_request_behavior() -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_client_still_has_no_aclose_method() -> None:
-    assert not hasattr(AsyncClient, "aclose")
+async def test_async_client_aclose_exists() -> None:
+    assert callable(AsyncClient.aclose)
 
 
 @pytest.mark.asyncio
-async def test_async_client_still_has_no_async_context_manager_behavior() -> None:
-    assert not hasattr(AsyncClient, "__aenter__")
-    assert not hasattr(AsyncClient, "__aexit__")
+async def test_async_client_aclose_closes_internal_httpx_client() -> None:
+    client = AsyncClient(base_url="https://api.example.test")
+
+    result = await client.aclose()
+
+    assert result is None
+    assert client._client.is_closed
+
+
+@pytest.mark.asyncio
+async def test_async_client_explicit_aclose_works() -> None:
+    client = AsyncClient(base_url="https://api.example.test")
+
+    await client.aclose()
+
+    assert client._client.is_closed
+
+
+@pytest.mark.asyncio
+async def test_async_client_double_aclose_does_not_crash() -> None:
+    client = AsyncClient(base_url="https://api.example.test")
+
+    await client.aclose()
+    await client.aclose()
+
+    assert client._client.is_closed
+
+
+@pytest.mark.asyncio
+async def test_async_client_aenter_returns_self() -> None:
+    client = AsyncClient(base_url="https://api.example.test")
+
+    assert await client.__aenter__() is client
+
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_async_client_context_manager_returns_self_and_closes_after_block() -> None:
+    async with AsyncClient(base_url="https://api.example.test") as client:
+        assert isinstance(client, AsyncClient)
+        assert not client._client.is_closed
+
+    assert client._client.is_closed
+
+
+@pytest.mark.asyncio
+async def test_async_client_context_manager_closes_when_block_raises() -> None:
+    client: AsyncClient | None = None
+
+    async def capture_and_raise() -> None:
+        nonlocal client
+        async with AsyncClient(base_url="https://api.example.test") as active_client:
+            client = active_client
+            raise RuntimeError("boom")
+
+    with pytest.raises(RuntimeError, match="boom"):
+        await capture_and_raise()
+
+    assert client is not None
+    assert client._client.is_closed
+
+
+@pytest.mark.asyncio
+async def test_async_client_context_manager_does_not_suppress_exceptions() -> None:
+    with pytest.raises(RuntimeError, match="boom"):
+        async with AsyncClient(base_url="https://api.example.test"):
+            raise RuntimeError("boom")
+
+
+@pytest.mark.asyncio
+async def test_async_client_request_works_inside_context_manager() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"ok": True})
+
+    async with AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        response = await client.get("/status")
+
+    assert isinstance(response, ResponseData)
+    assert response.json() == {"ok": True}
+    assert client._client.is_closed
+
+
+@pytest.mark.asyncio
+async def test_async_client_still_has_no_sync_context_manager_behavior() -> None:
+    assert not hasattr(AsyncClient, "__enter__")
+    assert not hasattr(AsyncClient, "__exit__")
 
 
 @pytest.mark.asyncio

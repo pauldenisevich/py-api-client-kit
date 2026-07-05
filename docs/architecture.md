@@ -18,6 +18,7 @@ tooling and CI exist
 first synchronous request execution path exists
 first asynchronous request execution path exists
 async convenience methods exist
+async client lifecycle support exists
 ```
 
 This document should be updated as the implementation becomes real.
@@ -173,6 +174,13 @@ Current implementation note:
 * `AsyncClient.request()` returns `ResponseData`.
 * Non-2xx async responses currently return `ResponseData` without structured
   package errors or status raising.
+* `AsyncClient.aclose()` exists and closes the underlying asynchronous
+  `httpx.AsyncClient`.
+* `AsyncClient` supports `async with AsyncClient(...) as client`.
+* The async context manager returns the `AsyncClient` instance from
+  `__aenter__` and closes the underlying `httpx.AsyncClient` on exit.
+* Double `aclose()` is safe because `aclose()` delegates to
+  `httpx.AsyncClient.aclose()`.
 * `AsyncClient` provides asynchronous convenience methods: `get`, `post`,
   `put`, `patch`, `delete`, and `head`.
 * Each asynchronous convenience method delegates to `AsyncClient.request()`, so
@@ -186,17 +194,18 @@ Current implementation note:
 * Async request execution still returns `ResponseData`.
 * Non-2xx async responses still return `ResponseData` without structured
   package errors or status raising.
-* `AsyncClient.aclose()` and async context manager behavior are not implemented
-  yet.
+* Request and convenience methods remain the asynchronous request path,
+  including when used inside an async context manager.
 * Structured errors are not implemented yet.
 * Retries, auth, rate limits, hooks, logging, redaction, and pagination are not
   implemented yet.
 * Future auth, retry, rate-limit, and hooks constructor parameters are
   intentionally deferred until their behavior is implemented.
 
-The `api_client_kit.client` subpackage currently provides `SyncClient`, early
-request and response models, plus URL, header, and timeout utilities. It does
-not yet export `AsyncClient` from the package namespace.
+The `api_client_kit.client` implementation modules currently define `SyncClient`,
+`AsyncClient`, early request and response models, plus URL, header, and timeout
+utilities. The `api_client_kit.client` and top-level `api_client_kit` package
+namespaces do not re-export these client classes yet.
 
 ## Request Model Layer
 
