@@ -17,6 +17,7 @@ client subpackage skeleton exists
 tooling and CI exist
 first synchronous request execution path exists
 first asynchronous request execution path exists
+async convenience methods exist
 ```
 
 This document should be updated as the implementation becomes real.
@@ -172,11 +173,23 @@ Current implementation note:
 * `AsyncClient.request()` returns `ResponseData`.
 * Non-2xx async responses currently return `ResponseData` without structured
   package errors or status raising.
-* Async convenience methods are not implemented yet.
+* `AsyncClient` provides asynchronous convenience methods: `get`, `post`,
+  `put`, `patch`, `delete`, and `head`.
+* Each asynchronous convenience method delegates to `AsyncClient.request()`, so
+  async request execution still uses the same URL joining, header merging,
+  timeout resolution, internal request context creation, transport call, and
+  `ResponseData` wrapping behavior.
+* `post`, `put`, and `patch` accept `json` and `data` payload arguments.
+* `get`, `delete`, and `head` cover normal params, headers, timeout,
+  idempotency metadata, and tags usage without body-specific convenience
+  parameters.
+* Async request execution still returns `ResponseData`.
+* Non-2xx async responses still return `ResponseData` without structured
+  package errors or status raising.
 * `AsyncClient.aclose()` and async context manager behavior are not implemented
   yet.
 * Structured errors are not implemented yet.
-* Retries, auth, rate limits, hooks, redaction, and pagination are not
+* Retries, auth, rate limits, hooks, logging, redaction, and pagination are not
   implemented yet.
 * Future auth, retry, rate-limit, and hooks constructor parameters are
   intentionally deferred until their behavior is implemented.

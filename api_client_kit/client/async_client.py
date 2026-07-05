@@ -103,3 +103,141 @@ class AsyncClient:
         )
 
         return ResponseData(raw=response)
+
+    async def get(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send an asynchronous GET request."""
+        return await self.request(
+            "GET",
+            path,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    async def post(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        json: Any | None = None,
+        data: Any | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send an asynchronous POST request."""
+        return await self.request(
+            "POST",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    async def put(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        json: Any | None = None,
+        data: Any | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send an asynchronous PUT request."""
+        return await self.request(
+            "PUT",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    async def patch(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        json: Any | None = None,
+        data: Any | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send an asynchronous PATCH request."""
+        return await self.request(
+            "PATCH",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    async def delete(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send an asynchronous DELETE request."""
+        return await self.request(
+            "DELETE",
+            path,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )
+
+    async def head(
+        self,
+        path: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, str] | httpx.Headers | None = None,
+        timeout: TimeoutValue | _RequestTimeoutUnset = _REQUEST_TIMEOUT_UNSET,
+        idempotency_key: str | None = None,
+        tags: tuple[str, ...] = (),
+    ) -> ResponseData:
+        """Send an asynchronous HEAD request."""
+        return await self.request(
+            "HEAD",
+            path,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            idempotency_key=idempotency_key,
+            tags=tags,
+        )

@@ -160,14 +160,14 @@ def test_async_client_is_not_exported_from_top_level_package() -> None:
     assert not hasattr(api_client_kit, "AsyncClient")
 
 
-def test_async_client_has_no_async_request_convenience_or_lifecycle_methods() -> None:
+def test_async_client_has_convenience_methods() -> None:
+    convenience_methods: tuple[str, ...] = ("get", "post", "put", "patch", "delete", "head")
+
+    assert all(callable(getattr(AsyncClient, name)) for name in convenience_methods)
+
+
+def test_async_client_has_no_async_lifecycle_methods() -> None:
     deferred_methods: tuple[str, ...] = (
-        "get",
-        "post",
-        "put",
-        "patch",
-        "delete",
-        "head",
         "aclose",
         "__aenter__",
         "__aexit__",

@@ -18,6 +18,313 @@ async def test_async_client_request_exists() -> None:
 
 
 @pytest.mark.asyncio
+async def test_async_client_convenience_methods_exist() -> None:
+    convenience_methods: tuple[str, ...] = ("get", "post", "put", "patch", "delete", "head")
+
+    assert all(callable(getattr(AsyncClient, name)) for name in convenience_methods)
+
+
+@pytest.mark.asyncio
+async def test_convenience_method_body_parameter_surface_matches_scope() -> None:
+    body_capable_methods: tuple[str, ...] = ("post", "put", "patch")
+    body_free_methods: tuple[str, ...] = ("get", "delete", "head")
+
+    for name in body_capable_methods:
+        parameters = inspect.signature(getattr(AsyncClient, name)).parameters
+        assert "json" in parameters
+        assert "data" in parameters
+
+    for name in body_free_methods:
+        parameters = inspect.signature(getattr(AsyncClient, name)).parameters
+        assert "json" not in parameters
+        assert "data" not in parameters
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method_name", "expected_method"),
+    [
+        ("get", "GET"),
+        ("post", "POST"),
+        ("put", "PUT"),
+        ("patch", "PATCH"),
+        ("delete", "DELETE"),
+        ("head", "HEAD"),
+    ],
+)
+async def test_convenience_methods_send_expected_http_method(
+    method_name: str,
+    expected_method: str,
+) -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(204)
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await getattr(client, method_name)("/resource")
+
+    assert requests[0].method == expected_method
+    assert isinstance(response, ResponseData)
+
+
+@pytest.mark.asyncio
+async def test_get_convenience_passes_params_and_headers() -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200)
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    await client.get(
+        "/users",
+        params={"limit": 10, "active": "true"},
+        headers={"X-Request-ID": "abc"},
+    )
+
+    assert requests[0].url.params["limit"] == "10"
+    assert requests[0].url.params["active"] == "true"
+    assert requests[0].headers["X-Request-ID"] == "abc"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method_name", "expected_method"),
+    [
+        ("post", "POST"),
+        ("put", "PUT"),
+        ("patch", "PATCH"),
+    ],
+)
+async def test_body_capable_convenience_methods_pass_json_payload(
+    method_name: str,
+    expected_method: str,
+) -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200, json={"ok": True})
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await getattr(client, method_name)("/users", json={"name": "Ada"})
+
+    assert requests[0].method == expected_method
+    assert jsonlib.loads(requests[0].content) == {"name": "Ada"}
+    assert response.json() == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_post_convenience_passes_data_payload() -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(201)
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.post("/uploads", data={"name": "Ada"})
+
+    assert isinstance(response, ResponseData)
+    assert requests[0].method == "POST"
+    assert requests[0].content == b"name=Ada"
+
+
+@pytest.mark.asyncio
+async def test_delete_convenience_sane_behavior() -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(202, json={"deleted": True})
+
+    client = AsyncClient(
+        base_url="https://api.example.test/api/v1",
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.delete(
+        "/users/1",
+        params={"force": "true"},
+        headers={"X-Request-ID": "delete-1"},
+    )
+
+    assert isinstance(response, ResponseData)
+    assert response.status_code == 202
+    assert requests[0].method == "DELETE"
+    assert str(requests[0].url) == "https://api.example.test/api/v1/users/1?force=true"
+    assert requests[0].headers["X-Request-ID"] == "delete-1"
+
+
+@pytest.mark.asyncio
+async def test_head_convenience_sane_behavior() -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(204, headers={"X-Resource": "present"})
+
+    client = AsyncClient(
+        base_url="https://api.example.test/api/v1",
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.head(
+        "/users/1",
+        params={"include": "metadata"},
+        headers={"X-Request-ID": "head-1"},
+    )
+
+    assert isinstance(response, ResponseData)
+    assert response.status_code == 204
+    assert response.headers["X-Resource"] == "present"
+    assert requests[0].method == "HEAD"
+    assert str(requests[0].url) == "https://api.example.test/api/v1/users/1?include=metadata"
+    assert requests[0].headers["X-Request-ID"] == "head-1"
+
+
+@pytest.mark.asyncio
+async def test_convenience_method_non_2xx_response_returns_response_data_without_raising() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(503, json={"error": "busy"})
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.get("/status")
+
+    assert isinstance(response, ResponseData)
+    assert response.status_code == 503
+    assert response.json() == {"error": "busy"}
+
+
+@pytest.mark.asyncio
+async def test_convenience_method_preserves_base_path_joining_through_request() -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200)
+
+    client = AsyncClient(
+        base_url="https://api.example.test/api/v1",
+        transport=httpx.MockTransport(handler),
+    )
+
+    await client.get("/users")
+
+    assert str(requests[0].url) == "https://api.example.test/api/v1/users"
+
+
+@pytest.mark.asyncio
+async def test_convenience_method_omitted_timeout_uses_client_default_timeout() -> None:
+    captured_timeouts: list[Any] = []
+    client = AsyncClient(base_url="https://api.example.test", timeout=7.5)
+
+    async def request_spy(**kwargs: Any) -> httpx.Response:
+        captured_timeouts.append(kwargs["timeout"])
+        return httpx.Response(200)
+
+    client._client.request = request_spy  # type: ignore[method-assign]
+
+    await client.get("/users")
+
+    assert captured_timeouts == [7.5]
+
+
+@pytest.mark.asyncio
+async def test_convenience_method_explicit_timeout_none_overrides_client_default_timeout() -> None:
+    captured_timeouts: list[Any] = []
+    client = AsyncClient(base_url="https://api.example.test", timeout=7.5)
+
+    async def request_spy(**kwargs: Any) -> httpx.Response:
+        captured_timeouts.append(kwargs["timeout"])
+        return httpx.Response(200)
+
+    client._client.request = request_spy  # type: ignore[method-assign]
+
+    await client.get("/users", timeout=None)
+
+    assert captured_timeouts == [None]
+
+
+@pytest.mark.asyncio
+async def test_convenience_method_per_request_httpx_timeout_is_preserved_by_identity() -> None:
+    captured_timeouts: list[Any] = []
+    client = AsyncClient(base_url="https://api.example.test", timeout=7.5)
+    timeout = httpx.Timeout(2.0)
+
+    async def request_spy(**kwargs: Any) -> httpx.Response:
+        captured_timeouts.append(kwargs["timeout"])
+        return httpx.Response(200)
+
+    client._client.request = request_spy  # type: ignore[method-assign]
+
+    await client.get("/users", timeout=timeout)
+
+    assert captured_timeouts == [timeout]
+    assert captured_timeouts[0] is timeout
+
+
+@pytest.mark.asyncio
+async def test_convenience_method_idempotency_key_does_not_automatically_add_header() -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200)
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    await client.post("/users", idempotency_key="request-123")
+
+    assert "Idempotency-Key" not in requests[0].headers
+
+
+@pytest.mark.asyncio
+async def test_convenience_method_tags_do_not_create_request_behavior() -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200)
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.get("/users", tags=("users", "read"))
+
+    assert response.status_code == 200
+    assert str(requests[0].url) == "https://api.example.test/users"
+    assert "tags" not in requests[0].headers
+
+
+@pytest.mark.asyncio
 async def test_get_request_reaches_expected_url() -> None:
     requests: list[httpx.Request] = []
 
@@ -340,14 +647,6 @@ async def test_tags_do_not_create_request_behavior() -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_client_still_has_no_convenience_methods() -> None:
-    convenience_methods: tuple[str, ...] = ("get", "post", "put", "patch", "delete", "head")
-
-    for name in convenience_methods:
-        assert not hasattr(AsyncClient, name)
-
-
-@pytest.mark.asyncio
 async def test_async_client_still_has_no_aclose_method() -> None:
     assert not hasattr(AsyncClient, "aclose")
 
@@ -366,3 +665,36 @@ async def test_no_auth_retry_rate_limit_or_hooks_placeholder_parameters_exist() 
     assert "retry_policy" not in parameters
     assert "rate_limiter" not in parameters
     assert "hooks" not in parameters
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method_name", "expected_method"),
+    [
+        ("get", "GET"),
+        ("post", "POST"),
+        ("put", "PUT"),
+        ("patch", "PATCH"),
+        ("delete", "DELETE"),
+        ("head", "HEAD"),
+    ],
+)
+async def test_convenience_methods_delegate_to_request(
+    method_name: str,
+    expected_method: str,
+) -> None:
+    calls: list[tuple[str, str, dict[str, Any]]] = []
+    client = AsyncClient(base_url="https://api.example.test")
+
+    async def request_spy(method: str, path: str, **kwargs: Any) -> ResponseData:
+        calls.append((method, path, kwargs))
+        return ResponseData(raw=httpx.Response(200))
+
+    client.request = request_spy  # type: ignore[method-assign]
+
+    response = await getattr(client, method_name)("/users", headers={"X-Test": "true"})
+
+    assert isinstance(response, ResponseData)
+    assert calls[0][0] == expected_method
+    assert calls[0][1] == "/users"
+    assert calls[0][2]["headers"] == {"X-Test": "true"}
