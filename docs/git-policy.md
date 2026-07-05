@@ -640,7 +640,7 @@ Do not stage or commit:
 * GitHub credentials
 * local machine paths
 * private notes
-* private Codex logs
+* private tool logs
 * files under `docs/private/`
 
 Before committing, confirm private files are not tracked:

@@ -26,13 +26,15 @@ package skeleton exists
 local development tooling exists
 CI exists
 early runtime client primitives are being implemented
-````
+```
 
 Core client objects are now importable from the top-level package:
 
 ```python
 from api_client_kit import AsyncClient, RequestOptions, ResponseData, SyncClient
 ```
+
+The top-level package namespace is the primary public import surface.
 
 The package remains work in progress and is not ready for production use.
 

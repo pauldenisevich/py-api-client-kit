@@ -570,13 +570,40 @@ Implementation may differ internally, but user-facing behavior should be consist
 
 ## Public API Policy
 
-Public API should be explicit.
+The top-level `api_client_kit` package namespace is the primary public
+compatibility surface.
 
-Package-level exports should be intentional.
+The following top-level names are public:
 
-A name exposed from `api_client_kit.__init__` should be treated as part of the compatibility surface.
+* `AsyncClient`
+* `RequestOptions`
+* `ResponseData`
+* `SyncClient`
+* `__version__`
 
-Internal helpers should stay internal until they are stable enough to expose.
+The `api_client_kit.client` subpackage also exports the core public client API:
+
+* `AsyncClient`
+* `RequestOptions`
+* `ResponseData`
+* `SyncClient`
+
+Internal implementation modules may change between releases unless their names
+are explicitly documented as public API.
+
+`RequestContext` is internal request-pipeline state and is not part of the
+public API.
+
+URL, header, and timeout helpers such as `join_url`, `merge_headers`, and
+`resolve_timeout` are currently module-level implementation utilities. They are
+not top-level exports and are not exported from `api_client_kit.client`.
+
+Public API changes are compatibility-affecting changes and should be reflected
+in release notes and versioning decisions.
+
+Runtime behavior, structured errors, retries, auth, rate limits, hooks, logging,
+redaction, and pagination remain separate feature areas. This export policy does
+not imply that those behaviors are implemented.
 
 ## Non-Goals
 
