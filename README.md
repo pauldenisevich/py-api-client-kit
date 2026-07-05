@@ -25,7 +25,8 @@ placeholder package published to PyPI
 package skeleton exists
 local development tooling exists
 CI exists
-early runtime client primitives are being implemented
+core sync/async client foundation is available
+public client imports are available
 ```
 
 Core client objects are now importable from the top-level package:
@@ -177,7 +178,9 @@ For `uv` users:
 uv add api-client-kit==0.0.1
 ```
 
-This version is not production-ready and does not yet include runtime API client functionality.
+The published placeholder package is not production-ready. The repository now
+contains the core sync/async client foundation, but the package remains under
+active development.
 
 The first intended usable public release will be:
 
