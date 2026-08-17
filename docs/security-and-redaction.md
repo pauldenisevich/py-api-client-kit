@@ -6,8 +6,8 @@ This document defines the security and redaction principles for `api-client-kit`
 
 The project is currently under active early development. Reusable header,
 diagnostic-URL, structured-payload, and bounded body-snippet redaction
-primitives are available; structured error handling and automatic diagnostic
-integration remain future work.
+primitives and the root package error foundation are available; automatic safe
+diagnostic integration remains future work.
 
 Current public usage:
 
@@ -233,7 +233,17 @@ observability hooks remain future work.
 
 ## Structured Errors
 
-Structured errors should include useful context without exposing secrets.
+`ApiClientError` is the current root package exception. It can store optional
+diagnostic context that has already been prepared by its caller. `str(error)`
+renders only the safe message and `repr(error)` renders only the class and
+message, so context is never automatically dumped into either representation.
+The base error does not sanitize arbitrary caller-supplied context; automatic
+safe context construction remains future work.
+
+HTTP, network, timeout, and decode error types do not exist yet, and clients do
+not yet integrate package errors.
+
+Future structured errors should include useful context without exposing secrets.
 
 Planned error context may include:
 
