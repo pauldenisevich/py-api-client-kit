@@ -100,19 +100,28 @@ def _scrub_secret_values(text: str, secrets: tuple[str, ...]) -> str:
 
 def _render_oversized_text(text: str, secrets: tuple[str, ...]) -> str:
     prefix_length = _MAX_BODY_SNIPPET_CHARS - len(_TRUNCATION_MARKER)
-    prefix = _remove_partial_secret_suffix(text[:prefix_length], secrets)
+    prefix = text[:prefix_length]
+    lookahead_length = max((len(secret) for secret in secrets), default=0)
+    lookahead = text[prefix_length : prefix_length + lookahead_length]
+    prefix = _remove_partial_secret_suffix(prefix, lookahead, secrets)
     prefix = _scrub_secret_values(prefix, secrets)
     return f"{prefix[:prefix_length]}{_TRUNCATION_MARKER}"
 
 
-def _remove_partial_secret_suffix(text: str, secrets: tuple[str, ...]) -> str:
+def _remove_partial_secret_suffix(
+    text: str,
+    lookahead: str,
+    secrets: tuple[str, ...],
+) -> str:
     if any(text.endswith(secret) for secret in secrets):
         return text
 
     for secret in secrets:
         max_prefix_length = min(len(secret) - 1, len(text))
         for prefix_length in range(max_prefix_length, 0, -1):
-            if text.endswith(secret[:prefix_length]):
+            if text.endswith(secret[:prefix_length]) and lookahead.startswith(
+                secret[prefix_length:]
+            ):
                 return text[:-prefix_length]
     return text
 

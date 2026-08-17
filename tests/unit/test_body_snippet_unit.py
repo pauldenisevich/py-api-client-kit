@@ -120,6 +120,16 @@ def test_safe_body_snippet_hides_a_secret_prefix_at_the_oversized_boundary() -> 
     assert result == "a" * 1_008 + _TRUNCATION_MARKER
 
 
+def test_safe_body_snippet_keeps_a_coincidental_oversized_secret_prefix() -> None:
+    known_value = "test-outside-secret"
+    result = safe_body_snippet(
+        "a" * 1_008 + "test" + "x" * 1_000_000,
+        secret_values=(known_value,),
+    )
+
+    assert result == "a" * 1_008 + "test" + _TRUNCATION_MARKER
+
+
 def test_safe_body_snippet_scrubs_a_complete_secret_at_the_oversized_boundary() -> None:
     known_value = "test-edge-secret"
     result = safe_body_snippet(
