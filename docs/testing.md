@@ -11,7 +11,7 @@ The project uses `pytest` and is designed to be tested without real external API
 The current test suite covers imports, request and response models, URL joining,
 header merging, timeout resolution, sync/async client foundations, header
 redaction, fragment-safe URL/query/userinfo redaction, recursive payload
-redaction, bounded body snippets, and the root `ApiClientError` foundation. As
+redaction, bounded body snippets, and the current package error taxonomy. As
 runtime functionality is added, every feature should include focused tests.
 
 ## Test Goals
@@ -94,12 +94,17 @@ Unit tests should cover isolated behavior such as:
 * optional context handling and defensive shallow context copying
 * message-only `str()` and class-plus-message `repr()` behavior
 * context non-rendering with fake secrets and native exception chaining
+* `NetworkError` and `TimeoutError` hierarchy and construction behavior
+* distinction between package `TimeoutError` and `builtins.TimeoutError`
+* inherited safe string/representation behavior and context non-rendering for
+  network errors
+* native cause chaining for network and timeout errors
 * errors-subpackage imports while top-level exports remain unchanged
 
-Future feature areas such as auth, retries, rate limits, HTTP status and
-network/timeout error hierarchies, decode errors, safe diagnostic-context
-construction, client/error integration, pagination, and observability should
-receive dedicated tests when they are implemented.
+Future feature areas such as auth, retries, rate limits, HTTP status errors,
+decode errors, safe diagnostic-context construction, HTTPX transport mapping,
+client error integration, pagination, and observability should receive
+dedicated tests when they are implemented.
 
 Unit tests should be fast, deterministic, and independent of external services.
 

@@ -6,7 +6,7 @@ This document defines the security and redaction principles for `api-client-kit`
 
 The project is currently under active early development. Reusable header,
 diagnostic-URL, structured-payload, and bounded body-snippet redaction
-primitives and the root package error foundation are available; automatic safe
+primitives and the initial package error taxonomy are available; automatic safe
 diagnostic integration remains future work.
 
 Current public usage:
@@ -240,8 +240,14 @@ message, so context is never automatically dumped into either representation.
 The base error does not sanitize arbitrary caller-supplied context; automatic
 safe context construction remains future work.
 
-HTTP, network, timeout, and decode error types do not exist yet, and clients do
-not yet integrate package errors.
+`NetworkError` and `TimeoutError` are current package error types. They inherit
+the message-only `str()` and class-plus-message `repr()` behavior, so optional
+context is not automatically rendered. They do not store raw underlying
+transport exceptions as fields; native `raise ... from ...` chaining is the
+intended cause mechanism. HTTPX-to-package mapping is not implemented yet, and
+clients do not yet integrate package errors.
+
+HTTP status and decode error types remain future work.
 
 Future structured errors should include useful context without exposing secrets.
 

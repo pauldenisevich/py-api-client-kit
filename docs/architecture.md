@@ -6,8 +6,8 @@ This document describes the current package architecture, public API surface,
 internal implementation boundaries, and planned future feature areas.
 
 The project is currently in early development. The core sync/async client
-foundation, standalone redaction primitives, and a root package error are
-implemented, while auth, retries, specialized structured errors, rate-limit
+foundation, standalone redaction primitives, and the initial package error
+taxonomy are implemented, while auth, retries, additional structured errors, rate-limit
 handling, pagination, and observability hooks remain future feature areas.
 
 ## Status
@@ -25,7 +25,7 @@ sync and async convenience methods exist
 sync and async client lifecycle support exists
 top-level and client subpackage public imports exist
 standalone header, diagnostic URL, recursive payload, and bounded body-snippet redaction primitives exist
-root `ApiClientError` foundation exists with optional already-prepared context storage
+`ApiClientError`, `NetworkError`, and `TimeoutError` exist with optional already-prepared context storage
 ```
 
 ## Architectural Goal
@@ -430,11 +430,22 @@ representation is the runtime class name plus the message; neither renders
 context. The base class does not sanitize arbitrary supplied context. Safe
 diagnostic-context construction remains future work.
 
+The current transport taxonomy is:
+
+```text
+ApiClientError
+└── NetworkError
+    └── TimeoutError
+```
+
+`NetworkError` and `TimeoutError` inherit the base safe message/context
+representation behavior unchanged. Their definitions contain no HTTPX mapping
+logic, and clients do not raise them yet.
+
 Future error concepts:
 
 * HTTP status errors
-* network errors
-* timeout errors
+* HTTPX-to-package transport mapping and client integration
 * decode errors
 * safe request context
 * safe response context
@@ -442,8 +453,9 @@ Future error concepts:
 * sanitized URLs
 * safe body snippets
 
-HTTP, network, timeout, and decode subclasses remain future work. Clients do
-not raise package errors yet, and client/error integration remains future work.
+HTTP status and decode subclasses remain future work. Safe diagnostic-context
+construction also remains future work. Clients do not raise package errors yet,
+and client/error integration remains future work.
 
 ## Future Pagination Layer
 
@@ -507,6 +519,7 @@ api_client_kit/
   errors/
     __init__.py
     base.py
+    network.py
   py.typed
 
 tests/
@@ -517,7 +530,8 @@ tests/
 The `api_client_kit/client/` modules contain the implemented core runtime client
 foundation and supporting request construction utilities. The `redaction/`
 modules provide standalone reusable redaction primitives. The `errors/`
-subpackage currently provides only the root `ApiClientError` foundation.
+subpackage currently provides `ApiClientError`, `NetworkError`, and
+`TimeoutError`.
 
 Future package structure may include modules such as:
 
