@@ -10,9 +10,9 @@ The project uses `pytest` and is designed to be tested without real external API
 
 The current test suite covers imports, request and response models, URL joining,
 header merging, timeout resolution, sync/async client foundations, header
-redaction, fragment-safe URL/query/userinfo redaction, and recursive payload
-redaction. As runtime functionality is added, every feature should include
-focused tests.
+redaction, fragment-safe URL/query/userinfo redaction, recursive payload
+redaction, and bounded body snippets. As runtime functionality is added, every
+feature should include focused tests.
 
 ## Test Goals
 
@@ -83,10 +83,17 @@ Unit tests should cover isolated behavior such as:
 * recursive payload redaction through Mapping/list/tuple nesting
 * mapping normalization, payload immutability, and opaque-leaf behavior
 * fake-secret absence from sanitized payload representations
+* empty and short body snippets, whitespace preservation, exact maximum bounds,
+  and deterministic truncation
+* UTF-8 text handling and non-UTF-8 binary byte-count markers
+* structured JSON redaction, malformed-JSON text fallback, and the structured
+  parsing resource ceiling
+* caller-supplied known-secret scrubbing, including a truncation-boundary
+  regression case
 
 Future feature areas such as auth, retries, rate limits, structured errors,
-body redaction, pagination, and observability should receive dedicated tests
-when they are implemented.
+client/error integration, pagination, and observability should receive dedicated
+tests when they are implemented.
 
 Unit tests should be fast, deterministic, and independent of external services.
 

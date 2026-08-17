@@ -5,14 +5,19 @@ This document defines the security and redaction principles for `api-client-kit`
 `api-client-kit` is intended to help developers build API clients that may handle credentials, tokens, headers, request payloads, response payloads, and error context. Security and redaction are therefore core design concerns, not optional add-ons.
 
 The project is currently under active early development. Reusable header,
-diagnostic-URL, and structured-payload redaction primitives are available;
-structured error handling and automatic diagnostic integration remain future
-work.
+diagnostic-URL, structured-payload, and bounded body-snippet redaction
+primitives are available; structured error handling and automatic diagnostic
+integration remain future work.
 
 Current public usage:
 
 ```python
-from api_client_kit.redaction import redact_headers, redact_payload, redact_url
+from api_client_kit.redaction import (
+    redact_headers,
+    redact_payload,
+    redact_url,
+    safe_body_snippet,
+)
 ```
 
 ## Security Goals
@@ -197,22 +202,34 @@ supported structures are outside this helper's contract.
 Clients, errors, logs, and hooks do not automatically invoke `redact_payload`
 yet.
 
-## Future Body Snippets
+## Body Snippets
 
-Errors may need to include a small response body snippet for debugging.
+`safe_body_snippet` returns a standalone safe diagnostic string for `str` or
+`bytes` bodies. It is not raw body content or a re-sendable payload. Empty
+bodies return `<empty>`. Safe plain text keeps its formatting where practical;
+the final text or JSON rendering is at most 1024 characters and longer output
+ends with `…<truncated>`.
 
-Body snippets should be:
+Callers may pass known request-side secret values through `secret_values`.
+Nonempty values are replaced exactly, case-sensitively, everywhere they occur;
+there is no generic token detection or arbitrary-text secret heuristic. This
+also prevents known credentials from leaking across the truncation boundary.
+Automatic collection of sensitive request values is not implemented yet.
 
-* size-limited
-* redaction-aware
-* safe for string conversion
-* safe for exception messages
-* safe for logs
-* explicit about truncation when truncated
+Bytes decode only with strict UTF-8 and then use the text behavior. Bytes that
+cannot decode as UTF-8 return only `<binary body: N bytes>`, exposing the byte
+count rather than raw content.
 
-Large payloads should never be included in full by default.
+Text at or below a 65,536-character/byte structured parsing ceiling is parsed
+best-effort as JSON. Valid JSON is passed through `redact_payload`, serialized
+as compact deterministic JSON, then scrubbed for caller-supplied secret values.
+Malformed JSON falls back to plain text without key-based heuristics. Larger
+bodies skip structured parsing and use the bounded text path.
 
-Binary or non-text payloads should be represented safely.
+Clients, errors, logs, and hooks do not automatically invoke
+`safe_body_snippet` yet. Structured package errors, automatic diagnostic
+context, RequestContext secret-value discovery, logging hooks, and
+observability hooks remain future work.
 
 ## Structured Errors
 

@@ -24,7 +24,7 @@ asynchronous request execution path exists
 sync and async convenience methods exist
 sync and async client lifecycle support exists
 top-level and client subpackage public imports exist
-standalone header, diagnostic URL, and recursive payload redaction primitives exist
+standalone header, diagnostic URL, recursive payload, and bounded body-snippet redaction primitives exist
 ```
 
 ## Architectural Goal
@@ -412,13 +412,15 @@ Detailed decoding behavior should be documented once implemented.
 
 ## Current Redaction Primitives and Future Error Layer
 
-The `api_client_kit.redaction` subpackage provides standalone reusable
-`redact_headers`, `redact_payload`, and `redact_url` helpers. They redact
-approved sensitive header, structured-payload, and query values, while
-`redact_url` also redacts userinfo and removes URL fragments. `redact_payload`
-recurses through mappings, lists, and tuples; mapping outputs normalize to
-plain dictionaries. These helpers are not yet integrated with clients or
-package errors.
+The `api_client_kit.redaction` subpackage provides four standalone reusable
+helpers: `redact_headers`, `redact_payload`, `redact_url`, and
+`safe_body_snippet`. They redact approved sensitive header, structured-payload,
+and query values, while `redact_url` also redacts userinfo and removes URL
+fragments. `redact_payload` recurses through mappings, lists, and tuples;
+mapping outputs normalize to plain dictionaries. `safe_body_snippet` composes
+`redact_payload` for eligible valid JSON and otherwise provides a bounded text
+or binary diagnostic representation. These helpers are not yet integrated with
+clients or package errors.
 
 Future package errors should be structured, useful, and safe.
 
@@ -438,8 +440,7 @@ Planned concepts:
 Error messages and representations must not leak credentials once structured
 package errors and diagnostics exist.
 
-Body diagnostics, structured errors, and client/error integration remain future
-architecture work.
+Structured errors and client/error integration remain future architecture work.
 
 ## Future Pagination Layer
 
@@ -496,6 +497,7 @@ api_client_kit/
     timeouts.py
   redaction/
     __init__.py
+    bodies.py
     headers.py
     payloads.py
     urls.py
