@@ -247,7 +247,16 @@ transport exceptions as fields; native `raise ... from ...` chaining is the
 intended cause mechanism. HTTPX-to-package mapping is not implemented yet, and
 clients do not yet integrate package errors.
 
-HTTP status and decode error types remain future work.
+`HttpStatusError` and its specialized HTTP status subclasses are also current
+package error types. An HTTP status error stores package `ResponseData`, with
+explicit raw HTTPX access available only through `error.response.raw`; there is
+no raw underlying-response alias directly on the exception. Attaching a response
+does not sanitize it, but response contents and inherited context are not
+automatically rendered by `str()` or `repr()`. Safe diagnostic-context
+construction, automatic status mapping, and client integration remain future
+work; response body diagnostics do not yet use the redaction primitives.
+
+Decode error types remain future work.
 
 Future structured errors should include useful context without exposing secrets.
 

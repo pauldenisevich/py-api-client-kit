@@ -99,12 +99,18 @@ Unit tests should cover isolated behavior such as:
 * inherited safe string/representation behavior and context non-rendering for
   network errors
 * native cause chaining for network and timeout errors
-* errors-subpackage imports while top-level exports remain unchanged
+* HTTP status error hierarchy and required package `ResponseData`
+* response identity, its explicit `error.response.raw` access path, and
+  exclusion from `Exception.args`
+* specialized HTTP status subclass construction and fake response/context secret
+  non-rendering
+* native chaining for HTTP status errors and errors-subpackage imports while
+  top-level exports remain unchanged
 
-Future feature areas such as auth, retries, rate limits, HTTP status errors,
-decode errors, safe diagnostic-context construction, HTTPX transport mapping,
-client error integration, pagination, and observability should receive
-dedicated tests when they are implemented.
+Future feature areas such as auth, retries, rate limits, status-to-exception
+mapping, decode errors, safe diagnostic-context construction, HTTPX transport
+mapping, sync/async client HTTP-error integration, pagination, and observability
+should receive dedicated tests when they are implemented.
 
 Unit tests should be fast, deterministic, and independent of external services.
 

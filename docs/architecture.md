@@ -7,8 +7,9 @@ internal implementation boundaries, and planned future feature areas.
 
 The project is currently in early development. The core sync/async client
 foundation, standalone redaction primitives, and the initial package error
-taxonomy are implemented, while auth, retries, additional structured errors, rate-limit
-handling, pagination, and observability hooks remain future feature areas.
+taxonomy are implemented, while auth, retries, safe diagnostic-context
+construction, rate-limit handling, pagination, and observability hooks remain
+future feature areas.
 
 ## Status
 
@@ -25,7 +26,7 @@ sync and async convenience methods exist
 sync and async client lifecycle support exists
 top-level and client subpackage public imports exist
 standalone header, diagnostic URL, recursive payload, and bounded body-snippet redaction primitives exist
-`ApiClientError`, `NetworkError`, and `TimeoutError` exist with optional already-prepared context storage
+`ApiClientError`, network errors, and HTTP status error types exist with optional already-prepared context storage
 ```
 
 ## Architectural Goal
@@ -406,8 +407,8 @@ Current implementation note:
   response.
 * `.json()` delegates directly to `httpx.Response.json()`.
 * Custom decode errors remain a future feature area.
-* Structured errors, redaction, response body snippets, status-error raising,
-  and richer decoding behavior remain future feature areas.
+* Status-error types exist, but status-error raising, redaction, response body
+  snippets, and richer decoding behavior remain future feature areas.
 
 Detailed decoding behavior should be documented once implemented.
 
@@ -430,21 +431,35 @@ representation is the runtime class name plus the message; neither renders
 context. The base class does not sanitize arbitrary supplied context. Safe
 diagnostic-context construction remains future work.
 
-The current transport taxonomy is:
+The current package error taxonomy is:
 
 ```text
 ApiClientError
-└── NetworkError
-    └── TimeoutError
+├── NetworkError
+│   └── TimeoutError
+└── HttpStatusError
+    ├── AuthenticationError
+    ├── AuthorizationError
+    ├── NotFoundError
+    ├── ConflictError
+    ├── ValidationError
+    ├── RateLimitError
+    └── ServerError
 ```
 
 `NetworkError` and `TimeoutError` inherit the base safe message/context
 representation behavior unchanged. Their definitions contain no HTTPX mapping
 logic, and clients do not raise them yet.
 
+`HttpStatusError` requires and retains the package `ResponseData` supplied to
+its constructor, preserving object identity. The explicit raw HTTPX escape hatch
+is `error.response.raw`; the exception has no direct raw-response alias.
+Responses and inherited context are excluded from automatic `str()` and
+`repr()` rendering. Its specialized subclasses are taxonomy only: no automatic
+status-to-error mapping exists yet, and clients do not raise these classes yet.
+
 Future error concepts:
 
-* HTTP status errors
 * HTTPX-to-package transport mapping and client integration
 * decode errors
 * safe request context
@@ -453,9 +468,9 @@ Future error concepts:
 * sanitized URLs
 * safe body snippets
 
-HTTP status and decode subclasses remain future work. Safe diagnostic-context
-construction also remains future work. Clients do not raise package errors yet,
-and client/error integration remains future work.
+Decode subclasses and safe diagnostic-context construction remain future work.
+Clients do not raise package errors yet, and client/error integration remains
+future work.
 
 ## Future Pagination Layer
 
@@ -519,6 +534,7 @@ api_client_kit/
   errors/
     __init__.py
     base.py
+    http.py
     network.py
   py.typed
 
@@ -530,8 +546,8 @@ tests/
 The `api_client_kit/client/` modules contain the implemented core runtime client
 foundation and supporting request construction utilities. The `redaction/`
 modules provide standalone reusable redaction primitives. The `errors/`
-subpackage currently provides `ApiClientError`, `NetworkError`, and
-`TimeoutError`.
+subpackage currently provides `ApiClientError`, `NetworkError`, `TimeoutError`,
+`HttpStatusError`, and its specialized HTTP status subclasses.
 
 Future package structure may include modules such as:
 
