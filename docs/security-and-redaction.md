@@ -4,14 +4,15 @@ This document defines the security and redaction principles for `api-client-kit`
 
 `api-client-kit` is intended to help developers build API clients that may handle credentials, tokens, headers, request payloads, response payloads, and error context. Security and redaction are therefore core design concerns, not optional add-ons.
 
-The project is currently under active early development. Reusable header and
-diagnostic-URL redaction primitives are available; structured error handling
-and automatic diagnostic integration remain future work.
+The project is currently under active early development. Reusable header,
+diagnostic-URL, and structured-payload redaction primitives are available;
+structured error handling and automatic diagnostic integration remain future
+work.
 
 Current public usage:
 
 ```python
-from api_client_kit.redaction import redact_headers, redact_url
+from api_client_kit.redaction import redact_headers, redact_payload, redact_url
 ```
 
 ## Security Goals
@@ -128,14 +129,22 @@ https://api.example.com/items?api_key=<redacted>&page=2
 
 Non-sensitive query parameters may remain visible when useful for debugging.
 
-## Future Payload Redaction
+## Payload Redaction
 
-Request and response payloads may contain secrets or customer data.
+`redact_payload` sanitizes common structured Python payloads as a standalone
+helper. It recursively rebuilds `Mapping`, `list`, and `tuple` values: mappings
+always become plain `dict` objects, while lists and tuples retain their types.
+Supported caller-owned containers are never mutated. All other values,
+including opaque custom objects and unsupported containers such as `set` and
+`frozenset`, are left unchanged and are not inspected.
 
-Future package work may provide best-effort recursive payload redaction for
-common structured payloads such as dictionaries and lists.
+It recognizes the fourteen approved sensitive string keys below with exact,
+case-insensitive matching. A matching key replaces its entire associated value
+with `<redacted>` without first traversing that value. Non-string mapping keys
+are preserved exactly and their values continue to recurse. Payload keys are
+structured data and are not URL- or form-decoded.
 
-Sensitive payload keys should include:
+Sensitive payload keys include:
 
 ```text
 token
@@ -147,6 +156,7 @@ key
 secret
 client_secret
 password
+auth
 authorization
 cookie
 session
@@ -177,7 +187,15 @@ Safe output:
 }
 ```
 
-Redaction should preserve enough structure to make debugging useful without exposing secret values.
+Safe-key structured values preserve enough shape to make debugging useful
+without exposing approved secret values. This is not a generic deep-copy API:
+opaque leaves may be returned by identity. It performs no arbitrary value/text
+scanning, and it does not inspect object attributes, dataclasses, Pydantic
+models, sets, generic iterables, or generators. Cyclic or pathologically deep
+supported structures are outside this helper's contract.
+
+Clients, errors, logs, and hooks do not automatically invoke `redact_payload`
+yet.
 
 ## Future Body Snippets
 

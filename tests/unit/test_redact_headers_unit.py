@@ -172,6 +172,6 @@ def test_redact_headers_is_exposed_only_from_redaction_subpackage() -> None:
     import api_client_kit
     import api_client_kit.redaction as redaction
 
-    assert redaction.__all__ == ("redact_headers", "redact_url")
+    assert redaction.__all__ == ("redact_headers", "redact_payload", "redact_url")
     assert redaction.redact_headers is redact_headers
     assert not hasattr(api_client_kit, "redact_headers")

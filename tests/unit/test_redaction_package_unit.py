@@ -13,6 +13,7 @@ pytestmark = [pytest.mark.unit]
     [
         "api_client_kit.redaction",
         "api_client_kit.redaction.headers",
+        "api_client_kit.redaction.payloads",
         "api_client_kit.redaction.urls",
     ],
 )
@@ -25,8 +26,9 @@ def test_redaction_modules_import(module_name: str) -> None:
 
 def test_redaction_subpackage_exports_only_implemented_helpers() -> None:
     import api_client_kit.redaction as redaction
-    from api_client_kit.redaction import redact_headers, redact_url
+    from api_client_kit.redaction import redact_headers, redact_payload, redact_url
 
-    assert redaction.__all__ == ("redact_headers", "redact_url")
+    assert redaction.__all__ == ("redact_headers", "redact_payload", "redact_url")
     assert redaction.redact_headers is redact_headers
+    assert redaction.redact_payload is redact_payload
     assert redaction.redact_url is redact_url
