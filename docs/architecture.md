@@ -6,9 +6,9 @@ This document describes the current package architecture, public API surface,
 internal implementation boundaries, and planned future feature areas.
 
 The project is currently in early development. The core sync/async client
-foundation is implemented, while production-oriented behaviors such as auth,
-retries, structured errors, redaction, rate-limit handling, pagination, and
-observability hooks remain future feature areas.
+foundation and standalone redaction primitives are implemented, while auth,
+retries, structured errors, rate-limit handling, pagination, and observability
+hooks remain future feature areas.
 
 ## Status
 
@@ -24,6 +24,7 @@ asynchronous request execution path exists
 sync and async convenience methods exist
 sync and async client lifecycle support exists
 top-level and client subpackage public imports exist
+standalone header and diagnostic URL redaction primitives exist
 ```
 
 ## Architectural Goal
@@ -91,7 +92,7 @@ rate-limit policy
   ↓
 retry policy and backoff
   ↓
-structured errors and redaction
+structured errors and their future client integration
   ↓
 pagination helpers
   ↓
@@ -207,8 +208,9 @@ Current implementation note:
 * Request and convenience methods remain the asynchronous request path,
   including when used inside an async context manager.
 * Structured errors remain a future feature area.
-* Retries, auth, rate limits, hooks, logging, redaction, and pagination remain
-  future feature areas.
+* Retries, auth, rate limits, hooks, logging, and pagination remain future
+  feature areas. Standalone redaction helpers do not run in the client request
+  path yet.
 * Auth, retry, rate-limit, and hooks constructor parameters are intentionally
   absent until their behavior is implemented.
 
@@ -408,7 +410,12 @@ Current implementation note:
 
 Detailed decoding behavior should be documented once implemented.
 
-## Future Error and Redaction Layer
+## Current Redaction Primitives and Future Error Layer
+
+The `api_client_kit.redaction` subpackage provides standalone reusable
+`redact_headers` and `redact_url` helpers. They redact approved sensitive header
+and query values, while `redact_url` also redacts userinfo and removes URL
+fragments. They are not yet integrated with clients or package errors.
 
 Future package errors should be structured, useful, and safe.
 
@@ -429,7 +436,8 @@ Planned concepts:
 Error messages and representations must not leak credentials once structured
 package errors and diagnostics exist.
 
-Redaction is part of the future architecture, not an afterthought.
+Payload redaction, body diagnostics, structured errors, and client/error
+integration remain future architecture work.
 
 ## Future Pagination Layer
 
@@ -484,6 +492,10 @@ api_client_kit/
     urls.py
     headers.py
     timeouts.py
+  redaction/
+    __init__.py
+    headers.py
+    urls.py
   py.typed
 
 tests/
@@ -492,7 +504,8 @@ tests/
 ```
 
 The `api_client_kit/client/` modules contain the implemented core runtime client
-foundation and supporting request construction utilities.
+foundation and supporting request construction utilities. The `redaction/`
+modules provide standalone reusable redaction primitives.
 
 Future package structure may include modules such as:
 
@@ -503,7 +516,6 @@ api_client_kit/
   hooks/
   pagination/
   ratelimits/
-  redaction/
   retries/
   transport/
 ```
@@ -615,8 +627,8 @@ Public API changes are compatibility-affecting changes and should be reflected
 in release notes and versioning decisions.
 
 Runtime behavior, structured errors, retries, auth, rate limits, hooks, logging,
-redaction, and pagination remain separate feature areas. This export policy does
-not imply that those behaviors are implemented.
+and pagination remain separate feature areas. Standalone redaction primitives do
+not imply automatic runtime integration.
 
 ## Non-Goals
 

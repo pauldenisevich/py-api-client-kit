@@ -4,7 +4,15 @@ This document defines the security and redaction principles for `api-client-kit`
 
 `api-client-kit` is intended to help developers build API clients that may handle credentials, tokens, headers, request payloads, response payloads, and error context. Security and redaction are therefore core design concerns, not optional add-ons.
 
-The project is currently under active early development. Runtime redaction helpers and structured error handling will be implemented in later package work. This document defines the intended policy and design expectations.
+The project is currently under active early development. Reusable header and
+diagnostic-URL redaction primitives are available; structured error handling
+and automatic diagnostic integration remain future work.
+
+Current public usage:
+
+```python
+from api_client_kit.redaction import redact_headers, redact_url
+```
 
 ## Security Goals
 
@@ -55,7 +63,11 @@ When uncertain, prefer redaction.
 
 ## Header Redaction
 
-The package should redact sensitive headers before including request or response context in errors, logs, hooks, or diagnostics.
+`redact_headers` returns a new `httpx.Headers` collection with sensitive values
+replaced by `<redacted>`. It recognizes the eight approved names listed below
+with exact, case-insensitive matching, preserves safe and repeated headers, and
+does not mutate its input. Clients, errors, logs, and hooks do not
+automatically invoke it yet.
 
 Headers that should be redacted include:
 
@@ -83,7 +95,12 @@ Header matching should be case-insensitive.
 
 URLs may contain credentials or tokens in query parameters.
 
-The package should redact sensitive query parameters before including URLs in errors, logs, hooks, or diagnostics.
+`redact_url` returns a safe diagnostic string. It recognizes the thirteen
+approved names below with exact, case-insensitive matching on decoded query
+names, replaces valued sensitive parameters with `<redacted>`, preserves
+repeated parameters and safe query text where practical, redacts URL userinfo,
+and strips fragments. It does not mutate its input. It is a standalone helper;
+clients, errors, logs, and hooks do not automatically invoke it yet.
 
 Query parameters that should be redacted include:
 
@@ -111,11 +128,12 @@ https://api.example.com/items?api_key=<redacted>&page=2
 
 Non-sensitive query parameters may remain visible when useful for debugging.
 
-## Payload Redaction
+## Future Payload Redaction
 
 Request and response payloads may contain secrets or customer data.
 
-The package should provide best-effort recursive payload redaction for common structured payloads such as dictionaries and lists.
+Future package work may provide best-effort recursive payload redaction for
+common structured payloads such as dictionaries and lists.
 
 Sensitive payload keys should include:
 
@@ -161,7 +179,7 @@ Safe output:
 
 Redaction should preserve enough structure to make debugging useful without exposing secret values.
 
-## Body Snippets
+## Future Body Snippets
 
 Errors may need to include a small response body snippet for debugging.
 

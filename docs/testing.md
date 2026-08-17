@@ -9,8 +9,9 @@ The project uses `pytest` and is designed to be tested without real external API
 `api-client-kit` is currently under active early development.
 
 The current test suite covers imports, request and response models, URL joining,
-header merging, timeout resolution, and sync/async client foundations. As
-runtime functionality is added, every feature should include focused tests.
+header merging, timeout resolution, sync/async client foundations, header
+redaction, and fragment-safe URL/query/userinfo redaction. As runtime
+functionality is added, every feature should include focused tests.
 
 ## Test Goals
 
@@ -76,10 +77,12 @@ Unit tests should cover isolated behavior such as:
 * request context normalization
 * response wrapper accessors
 * timeout resolution
+* header redaction
+* URL/query/userinfo redaction and fragment-safe diagnostic URL handling
 
 Future feature areas such as auth, retries, rate limits, structured errors,
-redaction, pagination, and observability should receive dedicated tests when
-they are implemented.
+payload/body redaction, pagination, and observability should receive dedicated
+tests when they are implemented.
 
 Unit tests should be fast, deterministic, and independent of external services.
 
@@ -178,8 +181,8 @@ These examples are documentation examples, not doctests.
 
 Real external API calls, real credentials, and network-dependent tests are not
 allowed. Future feature areas such as auth, retries, rate limits, structured
-errors, redaction, pagination, and observability should receive dedicated tests
-when they are implemented.
+errors, payload/body redaction, pagination, and observability should receive
+dedicated tests when they are implemented.
 
 ## No Real Network Calls
 
@@ -222,7 +225,9 @@ Use obvious fake values:
 "secret-value"
 ```
 
-Any test involving secrets should assert that sensitive values are redacted from errors, logs, hook payloads, and representations.
+Any test involving secrets should use fake values and assert their absence from
+redacted helper output. Errors, logs, and hook payloads remain future runtime
+integration areas.
 
 ## Pytest Markers
 
