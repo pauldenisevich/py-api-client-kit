@@ -3,6 +3,7 @@ from __future__ import annotations
 import httpx
 import pytest
 from api_client_kit.redaction import redact_url
+from api_client_kit.redaction.urls import _sensitive_url_values
 
 pytestmark = [pytest.mark.unit]
 
@@ -156,6 +157,14 @@ def test_redact_url_strips_fragments(url: str, expected: str) -> None:
 
 def test_redact_url_preserves_empty_and_valueless_query_parameter_semantics() -> None:
     assert redact_url("/items?token=&token&page=") == "/items?token=<redacted>&token&page="
+
+
+def test_sensitive_url_values_ignores_empty_sensitive_query_values() -> None:
+    assert _sensitive_url_values("/items?token=&token&safe=visible") == ()
+
+
+def test_sensitive_url_values_collects_userinfo_username_without_password() -> None:
+    assert _sensitive_url_values("https://test-user@example.test/items") == ("test-user",)
 
 
 def test_redact_url_accepts_httpx_url_without_mutating_it_and_returns_str() -> None:

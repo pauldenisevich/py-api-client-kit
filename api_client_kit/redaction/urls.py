@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from urllib.parse import unquote_plus, urlsplit, urlunsplit
+from urllib.parse import unquote, unquote_plus, urlsplit, urlunsplit
 
 import httpx
 
@@ -65,3 +65,30 @@ def _redact_userinfo(netloc: str) -> str:
     _, password_separator, _ = userinfo.partition(":")
     redacted_userinfo = f"{_REDACTED}:{_REDACTED}" if password_separator else _REDACTED
     return f"{redacted_userinfo}@{host}"
+
+
+def _sensitive_url_values(url: str | httpx.URL) -> tuple[str, ...]:
+    """Return raw credential values governed by this module's URL policy."""
+    raw_url = str(url)
+    url_without_fragment, _, _ = raw_url.partition("#")
+    parts = urlsplit(url_without_fragment)
+    values = list(_userinfo_values(parts.netloc))
+
+    for segment in parts.query.split("&"):
+        name, separator, value = segment.partition("=")
+        if separator and unquote_plus(name).casefold() in _SENSITIVE_QUERY_NAMES:
+            decoded_value = unquote_plus(value)
+            if decoded_value:
+                values.append(decoded_value)
+    return tuple(values)
+
+
+def _userinfo_values(netloc: str) -> tuple[str, ...]:
+    userinfo, separator, _ = netloc.rpartition("@")
+    if not separator:
+        return ()
+    username, password_separator, password = userinfo.partition(":")
+    values = [unquote(username)]
+    if password_separator:
+        values.append(unquote(password))
+    return tuple(value for value in values if value)

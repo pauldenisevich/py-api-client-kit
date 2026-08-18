@@ -31,3 +31,12 @@ def redact_headers(headers: Mapping[str, str] | httpx.Headers) -> httpx.Headers:
             for name, value in httpx.Headers(headers).multi_items()
         ]
     )
+
+
+def _sensitive_header_values(headers: Mapping[str, str] | httpx.Headers) -> tuple[str, ...]:
+    """Return raw values for headers governed by this module's redaction policy."""
+    return tuple(
+        value
+        for name, value in httpx.Headers(headers).multi_items()
+        if name.lower() in _SENSITIVE_HEADER_NAMES and value
+    )

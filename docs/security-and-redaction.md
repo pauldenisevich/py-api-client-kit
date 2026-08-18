@@ -227,9 +227,27 @@ Malformed JSON falls back to plain text without key-based heuristics. Larger
 bodies skip structured parsing and use the bounded text path.
 
 Clients, errors, logs, and hooks do not automatically invoke
-`safe_body_snippet` yet. Structured package errors, automatic diagnostic
-context, RequestContext secret-value discovery, logging hooks, and
-observability hooks remain future work.
+`safe_body_snippet` yet. Structured package errors, client integration, logging
+hooks, and observability hooks remain future work.
+
+## Internal Safe Diagnostic Context
+
+The internal package context builder produces a small, intentionally sanitized
+diagnostic mapping; it does not retain the raw request URL. Existing URL and
+header redactors sanitize request and response diagnostics. Known sensitive
+request-header, query, and userinfo values are collected under those same
+policies and supplied to `safe_body_snippet`, so server echoes are scrubbed.
+
+Bodies remain bounded. A structured payload is attempted only for JSON or
+`+json` media types and only by parsing already-sanitized bounded body output.
+Malformed JSON omits payload enrichment; binary bodies use a safe marker and
+oversized bodies remain bounded. Missing responses omit response-only fields.
+The context is internal and is not automatically logged; it adds no request-ID,
+correlation-ID, or vendor-trace heuristics.
+
+This differs from arbitrary `ApiClientError.context` supplied by callers:
+caller-provided context is generic storage and is not automatically sanitized.
+Package-generated safe diagnostic context is intentionally sanitized.
 
 ## Structured Errors
 
@@ -237,8 +255,7 @@ observability hooks remain future work.
 diagnostic context that has already been prepared by its caller. `str(error)`
 renders only the safe message and `repr(error)` renders only the class and
 message, so context is never automatically dumped into either representation.
-The base error does not sanitize arbitrary caller-supplied context; automatic
-safe context construction remains future work.
+The base error does not sanitize arbitrary caller-supplied context.
 
 `NetworkError` and `TimeoutError` are current package error types. They inherit
 the message-only `str()` and class-plus-message `repr()` behavior, so optional
@@ -253,8 +270,9 @@ explicit raw HTTPX access available only through `error.response.raw`; there is
 no raw underlying-response alias directly on the exception. Attaching a response
 does not sanitize it, but response contents and inherited context are not
 automatically rendered by `str()` or `repr()`. Safe diagnostic-context
-construction, automatic status mapping, and client integration remain future
-work; response body diagnostics do not yet use the redaction primitives.
+construction is available internally, while automatic status mapping and client
+integration remain future work; response body diagnostics are not yet attached
+to error instances.
 
 Decode error types remain future work.
 

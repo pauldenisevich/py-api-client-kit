@@ -59,3 +59,11 @@ def test_top_level_package_does_not_export_error_types() -> None:
     assert not hasattr(api_client_kit, "ValidationError")
     assert not hasattr(api_client_kit, "RateLimitError")
     assert not hasattr(api_client_kit, "ServerError")
+
+
+def test_safe_context_builder_remains_internal() -> None:
+    assert "_build_error_context" not in errors.__all__
+    assert not hasattr(errors, "_build_error_context")
+    assert not hasattr(errors, "build_error_context")
+    assert not hasattr(api_client_kit, "_build_error_context")
+    assert not hasattr(api_client_kit, "build_error_context")

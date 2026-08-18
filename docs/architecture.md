@@ -6,10 +6,10 @@ This document describes the current package architecture, public API surface,
 internal implementation boundaries, and planned future feature areas.
 
 The project is currently in early development. The core sync/async client
-foundation, standalone redaction primitives, and the initial package error
-taxonomy are implemented, while auth, retries, safe diagnostic-context
-construction, rate-limit handling, pagination, and observability hooks remain
-future feature areas.
+foundation, standalone redaction primitives, the initial package error taxonomy,
+and an internal safe diagnostic-context builder are implemented, while auth,
+retries, rate-limit handling, pagination, and observability hooks remain future
+feature areas.
 
 ## Status
 
@@ -468,7 +468,8 @@ Future error concepts:
 * sanitized URLs
 * safe body snippets
 
-Decode subclasses and safe diagnostic-context construction remain future work.
+Decode subclasses remain future work. Safe diagnostic-context construction is
+available internally but is not yet wired into error mapping or clients.
 Clients do not raise package errors yet, and client/error integration remains
 future work.
 
@@ -534,6 +535,7 @@ api_client_kit/
   errors/
     __init__.py
     base.py
+    context.py
     http.py
     network.py
   py.typed
@@ -547,7 +549,13 @@ The `api_client_kit/client/` modules contain the implemented core runtime client
 foundation and supporting request construction utilities. The `redaction/`
 modules provide standalone reusable redaction primitives. The `errors/`
 subpackage currently provides `ApiClientError`, `NetworkError`, `TimeoutError`,
-`HttpStatusError`, and its specialized HTTP status subclasses.
+`HttpStatusError`, its specialized HTTP status subclasses, and an internal safe
+diagnostic-context builder. The builder accepts `RequestContext`, an optional
+HTTP response, and an attempt number; it returns sanitized request diagnostics,
+and response status, headers, a bounded body snippet, and optional structured
+JSON diagnostics when a response exists. It is not exported, is not wired into
+clients yet, and does not implement status mapping; decode errors remain future
+work.
 
 Future package structure may include modules such as:
 

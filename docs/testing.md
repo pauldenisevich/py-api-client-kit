@@ -11,8 +11,9 @@ The project uses `pytest` and is designed to be tested without real external API
 The current test suite covers imports, request and response models, URL joining,
 header merging, timeout resolution, sync/async client foundations, header
 redaction, fragment-safe URL/query/userinfo redaction, recursive payload
-redaction, bounded body snippets, and the current package error taxonomy. As
-runtime functionality is added, every feature should include focused tests.
+redaction, bounded body snippets, the current package error taxonomy, and
+internal safe diagnostic-context construction. As runtime functionality is
+added, every feature should include focused tests.
 
 ## Test Goals
 
@@ -106,9 +107,13 @@ Unit tests should cover isolated behavior such as:
   non-rendering
 * native chaining for HTTP status errors and errors-subpackage imports while
   top-level exports remain unchanged
+* request-only and response-side safe contexts, missing responses, empty
+  bodies, URL/header composition, echoed-credential scrubbing, JSON and `+json`
+  media types, malformed/non-JSON/binary/large bodies, source immutability, and
+  private export boundaries
 
 Future feature areas such as auth, retries, rate limits, status-to-exception
-mapping, decode errors, safe diagnostic-context construction, HTTPX transport
+mapping, decode errors, HTTPX transport
 mapping, sync/async client HTTP-error integration, pagination, and observability
 should receive dedicated tests when they are implemented.
 
