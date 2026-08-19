@@ -6,10 +6,10 @@ This document describes the current package architecture, public API surface,
 internal implementation boundaries, and planned future feature areas.
 
 The project is currently in early development. The core sync/async client
-foundation, standalone redaction primitives, the initial package error taxonomy,
-and an internal safe diagnostic-context builder are implemented, while auth,
-retries, rate-limit handling, pagination, and observability hooks remain future
-feature areas.
+foundation, standalone redaction primitives, package error taxonomy, internal
+safe diagnostic-context builder, and internal HTTP status-to-error construction
+seam are implemented, while auth, retries, rate-limit handling, pagination, and
+observability hooks remain future feature areas.
 
 ## Status
 
@@ -26,7 +26,7 @@ sync and async convenience methods exist
 sync and async client lifecycle support exists
 top-level and client subpackage public imports exist
 standalone header, diagnostic URL, recursive payload, and bounded body-snippet redaction primitives exist
-`ApiClientError`, network errors, and HTTP status error types exist with optional already-prepared context storage
+`ApiClientError`, network errors, HTTP status error types, and internal status-to-error construction exist
 ```
 
 ## Architectural Goal
@@ -407,8 +407,8 @@ Current implementation note:
   response.
 * `.json()` delegates directly to `httpx.Response.json()`.
 * Custom decode errors remain a future feature area.
-* Status-error types exist, but status-error raising, redaction, response body
-  snippets, and richer decoding behavior remain future feature areas.
+* The internal status mapping constructs errors and safe diagnostics but is not
+  called by clients; status-error raising and richer decoding remain future work.
 
 Detailed decoding behavior should be documented once implemented.
 
@@ -421,15 +421,15 @@ and query values, while `redact_url` also redacts userinfo and removes URL
 fragments. `redact_payload` recurses through mappings, lists, and tuples;
 mapping outputs normalize to plain dictionaries. `safe_body_snippet` composes
 `redact_payload` for eligible valid JSON and otherwise provides a bounded text
-or binary diagnostic representation. These helpers are not yet integrated with
-clients or package errors.
+or binary diagnostic representation. They are used by the internal HTTP status
+mapping for error diagnostics, but are not integrated with clients, logs, or
+hooks.
 
 `api_client_kit.errors.ApiClientError` is the implemented root package exception
 foundation. It accepts a safe message and optional already-prepared diagnostic
 context. Its automatic string representation is the message only, and its
 representation is the runtime class name plus the message; neither renders
-context. The base class does not sanitize arbitrary supplied context. Safe
-diagnostic-context construction remains future work.
+context. The base class does not sanitize arbitrary supplied context.
 
 The current package error taxonomy is:
 
@@ -455,21 +455,34 @@ logic, and clients do not raise them yet.
 its constructor, preserving object identity. The explicit raw HTTPX escape hatch
 is `error.response.raw`; the exception has no direct raw-response alias.
 Responses and inherited context are excluded from automatic `str()` and
-`repr()` rendering. Its specialized subclasses are taxonomy only: no automatic
-status-to-error mapping exists yet, and clients do not raise these classes yet.
+`repr()` rendering. One internal mapping module constructs an HTTP error for a
+`ResponseData` status as follows:
+
+```text
+ResponseData.status_code
+        ↓
+single internal status mapping
+        ↓
+correct HttpStatusError subtype
+        +
+_build_error_context(...)
+        ↓
+fully constructed package HTTP error
+```
+
+The exact mapping is 401 to `AuthenticationError`, 403 to
+`AuthorizationError`, 404 to `NotFoundError`, 409 to `ConflictError`, 422 to
+`ValidationError`, and 429 to `RateLimitError`. Statuses from 500 through 599
+map to `ServerError`; all other statuses at least 400 map to `HttpStatusError`.
+Statuses below 400 produce no error. The mapping is internal and intended as the
+future shared sync/async seam, but clients do not invoke it yet.
 
 Future error concepts:
 
 * HTTPX-to-package transport mapping and client integration
 * decode errors
-* safe request context
-* safe response context
-* sanitized headers
-* sanitized URLs
-* safe body snippets
 
-Decode subclasses remain future work. Safe diagnostic-context construction is
-available internally but is not yet wired into error mapping or clients.
+Decode subclasses and HTTPX-to-package transport mapping remain future work.
 Clients do not raise package errors yet, and client/error integration remains
 future work.
 
@@ -537,6 +550,7 @@ api_client_kit/
     base.py
     context.py
     http.py
+    mapping.py
     network.py
   py.typed
 
@@ -549,13 +563,13 @@ The `api_client_kit/client/` modules contain the implemented core runtime client
 foundation and supporting request construction utilities. The `redaction/`
 modules provide standalone reusable redaction primitives. The `errors/`
 subpackage currently provides `ApiClientError`, `NetworkError`, `TimeoutError`,
-`HttpStatusError`, its specialized HTTP status subclasses, and an internal safe
-diagnostic-context builder. The builder accepts `RequestContext`, an optional
-HTTP response, and an attempt number; it returns sanitized request diagnostics,
-and response status, headers, a bounded body snippet, and optional structured
-JSON diagnostics when a response exists. It is not exported, is not wired into
-clients yet, and does not implement status mapping; decode errors remain future
-work.
+`HttpStatusError`, its specialized HTTP status subclasses, an internal safe
+diagnostic-context builder, and an internal status mapping factory. The builder
+accepts `RequestContext`, an optional HTTP response, and an attempt number; it
+returns sanitized request diagnostics, response status, headers, a bounded body
+snippet, and optional structured JSON diagnostics when a response exists. The
+mapping factory is not exported and constructs status errors with that context,
+but it is not wired into clients; decode errors remain future work.
 
 Future package structure may include modules such as:
 

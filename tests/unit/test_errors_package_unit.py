@@ -67,3 +67,11 @@ def test_safe_context_builder_remains_internal() -> None:
     assert not hasattr(errors, "build_error_context")
     assert not hasattr(api_client_kit, "_build_error_context")
     assert not hasattr(api_client_kit, "build_error_context")
+
+
+def test_http_status_mapping_factory_remains_internal() -> None:
+    assert "_http_error_for_response" not in errors.__all__
+    assert not hasattr(errors, "_http_error_for_response")
+    assert not hasattr(errors, "http_error_for_response")
+    assert not hasattr(api_client_kit, "_http_error_for_response")
+    assert not hasattr(api_client_kit, "http_error_for_response")

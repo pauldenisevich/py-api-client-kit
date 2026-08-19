@@ -226,9 +226,9 @@ as compact deterministic JSON, then scrubbed for caller-supplied secret values.
 Malformed JSON falls back to plain text without key-based heuristics. Larger
 bodies skip structured parsing and use the bounded text path.
 
-Clients, errors, logs, and hooks do not automatically invoke
-`safe_body_snippet` yet. Structured package errors, client integration, logging
-hooks, and observability hooks remain future work.
+The internal HTTP status mapping uses `safe_body_snippet` through the safe
+context builder. Clients, logs, and hooks do not automatically invoke it yet.
+Client integration, logging hooks, and observability hooks remain future work.
 
 ## Internal Safe Diagnostic Context
 
@@ -269,10 +269,15 @@ package error types. An HTTP status error stores package `ResponseData`, with
 explicit raw HTTPX access available only through `error.response.raw`; there is
 no raw underlying-response alias directly on the exception. Attaching a response
 does not sanitize it, but response contents and inherited context are not
-automatically rendered by `str()` or `repr()`. Safe diagnostic-context
-construction is available internally, while automatic status mapping and client
-integration remain future work; response body diagnostics are not yet attached
-to error instances.
+automatically rendered by `str()` or `repr()`. The internal status mapping
+constructs HTTP errors with the deterministic message `HTTP request failed with
+status {status_code}`. No server body or payload enters that message; safe
+diagnostic context comes only from `_build_error_context`. Original
+`ResponseData` stays explicit structured state, and raw HTTPX access remains
+only `error.response.raw`. The mapping emits no logs or events. A 429 adds only
+`RateLimitError` classification, and a 5xx adds only `ServerError`
+classification—neither adds waiting, retry, or rate-limit semantics. Clients do
+not invoke the mapping yet, so they do not yet raise these errors.
 
 Decode error types remain future work.
 

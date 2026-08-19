@@ -11,9 +11,10 @@ The project uses `pytest` and is designed to be tested without real external API
 The current test suite covers imports, request and response models, URL joining,
 header merging, timeout resolution, sync/async client foundations, header
 redaction, fragment-safe URL/query/userinfo redaction, recursive payload
-redaction, bounded body snippets, the current package error taxonomy, and
-internal safe diagnostic-context construction. As runtime functionality is
-added, every feature should include focused tests.
+redaction, bounded body snippets, the current package error taxonomy, internal
+safe diagnostic-context construction, and internal HTTP status-to-exception
+mapping. As runtime functionality is added, every feature should include focused
+tests.
 
 ## Test Goals
 
@@ -111,11 +112,15 @@ Unit tests should cover isolated behavior such as:
   bodies, URL/header composition, echoed-credential scrubbing, JSON and `+json`
   media types, malformed/non-JSON/binary/large bodies, source immutability, and
   private export boundaries
+* explicit status mappings, generic 4xx mapping, 500–599 server mapping, and
+  499/500/599/600 boundaries
+* non-error and redirect `None` behavior, exact deterministic status-only
+  messages, safe context composition, response identity and raw-response path,
+  attempt propagation, and private mapping export boundaries
 
-Future feature areas such as auth, retries, rate limits, status-to-exception
-mapping, decode errors, HTTPX transport
-mapping, sync/async client HTTP-error integration, pagination, and observability
-should receive dedicated tests when they are implemented.
+Future feature areas such as auth, retries, rate limits, decode errors, HTTPX
+transport mapping, sync/async client HTTP-error integration, `raise_for_status`,
+pagination, and observability should receive dedicated tests when implemented.
 
 Unit tests should be fast, deterministic, and independent of external services.
 
