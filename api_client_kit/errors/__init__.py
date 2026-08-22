@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from api_client_kit.errors.base import ApiClientError
+from api_client_kit.errors.decode import DecodeError
 from api_client_kit.errors.http import (
     AuthenticationError,
     AuthorizationError,
@@ -27,4 +28,5 @@ __all__ = (  # noqa: RUF022
     "ValidationError",
     "RateLimitError",
     "ServerError",
+    "DecodeError",
 )

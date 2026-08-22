@@ -26,7 +26,8 @@ sync and async convenience methods exist
 sync and async client lifecycle support exists
 top-level and client subpackage public imports exist
 standalone header, diagnostic URL, recursive payload, and bounded body-snippet redaction primitives exist
-`ApiClientError`, network errors, HTTP status error types, and internal status-to-error construction exist
+`ApiClientError`, network errors, HTTP status and decode error types, and
+internal status-to-error construction exist
 ```
 
 ## Architectural Goal
@@ -406,7 +407,8 @@ Current implementation note:
 * `status_code`, `headers`, `text`, and `content` delegate directly to the raw
   response.
 * `.json()` delegates directly to `httpx.Response.json()`.
-* Custom decode errors remain a future feature area.
+* `DecodeError` exists for package-defined failures while decoding an existing
+  response, but `.json()` does not yet raise it.
 * The internal status mapping constructs errors and safe diagnostics but is not
   called by clients; status-error raising and richer decoding remain future work.
 
@@ -437,14 +439,15 @@ The current package error taxonomy is:
 ApiClientError
 ├── NetworkError
 │   └── TimeoutError
-└── HttpStatusError
-    ├── AuthenticationError
-    ├── AuthorizationError
-    ├── NotFoundError
-    ├── ConflictError
-    ├── ValidationError
-    ├── RateLimitError
-    └── ServerError
+├── HttpStatusError
+│   ├── AuthenticationError
+│   ├── AuthorizationError
+│   ├── NotFoundError
+│   ├── ConflictError
+│   ├── ValidationError
+│   ├── RateLimitError
+│   └── ServerError
+└── DecodeError
 ```
 
 `NetworkError` and `TimeoutError` inherit the base safe message/context
@@ -477,12 +480,21 @@ map to `ServerError`; all other statuses at least 400 map to `HttpStatusError`.
 Statuses below 400 produce no error. The mapping is internal and intended as the
 future shared sync/async seam, but clients do not invoke it yet.
 
+`DecodeError` directly subclasses `ApiClientError`, rather than
+`HttpStatusError`,
+because decoding failures are independent of status classification. It requires
+the package `ResponseData` wrapper and retains the supplied wrapper by identity.
+The explicit raw HTTPX path is `error.response.raw`. Neither the attached response
+nor optional context is included in automatic `str()` or `repr()` output.
+`ResponseData.json()` continues to delegate directly to HTTPX and does not yet
+raise `DecodeError`; safe package-generated decode context is future work.
+
 Future error concepts:
 
 * HTTPX-to-package transport mapping and client integration
-* decode errors
+* decode integration and safe package-generated decode diagnostics
 
-Decode subclasses and HTTPX-to-package transport mapping remain future work.
+Decode integration and HTTPX-to-package transport mapping remain future work.
 Clients do not raise package errors yet, and client/error integration remains
 future work.
 
@@ -549,6 +561,7 @@ api_client_kit/
     __init__.py
     base.py
     context.py
+    decode.py
     http.py
     mapping.py
     network.py
@@ -563,13 +576,14 @@ The `api_client_kit/client/` modules contain the implemented core runtime client
 foundation and supporting request construction utilities. The `redaction/`
 modules provide standalone reusable redaction primitives. The `errors/`
 subpackage currently provides `ApiClientError`, `NetworkError`, `TimeoutError`,
-`HttpStatusError`, its specialized HTTP status subclasses, an internal safe
-diagnostic-context builder, and an internal status mapping factory. The builder
+`HttpStatusError`, its specialized HTTP status subclasses, `DecodeError`, an
+internal safe diagnostic-context builder, and an internal status mapping factory.
+The builder
 accepts `RequestContext`, an optional HTTP response, and an attempt number; it
 returns sanitized request diagnostics, response status, headers, a bounded body
 snippet, and optional structured JSON diagnostics when a response exists. The
 mapping factory is not exported and constructs status errors with that context,
-but it is not wired into clients; decode errors remain future work.
+but it is not wired into clients; decode integration remains future work.
 
 Future package structure may include modules such as:
 

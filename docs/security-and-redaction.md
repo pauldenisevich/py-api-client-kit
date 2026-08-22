@@ -279,7 +279,14 @@ only `error.response.raw`. The mapping emits no logs or events. A 429 adds only
 classification—neither adds waiting, retry, or rate-limit semantics. Clients do
 not invoke the mapping yet, so they do not yet raise these errors.
 
-Decode error types remain future work.
+`DecodeError` is a current package error type for failures while decoding an
+existing package `ResponseData`. It retains that wrapper by identity, with raw
+HTTPX access explicit only through `error.response.raw`. Attaching a response
+does not sanitize it, but raw response/body data and optional context do not
+automatically enter `str()` or `repr()`. Arbitrary caller-supplied context is
+not automatically sanitized. `ResponseData.json()` does not yet translate parser
+failures into `DecodeError`; safe package-generated decode diagnostics remain
+future work.
 
 Future structured errors should include useful context without exposing secrets.
 

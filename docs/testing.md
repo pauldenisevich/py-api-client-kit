@@ -108,6 +108,13 @@ Unit tests should cover isolated behavior such as:
   non-rendering
 * native chaining for HTTP status errors and errors-subpackage imports while
   top-level exports remain unchanged
+* `DecodeError` hierarchy and its independence from `HttpStatusError` and
+  `ValueError`
+* required package `ResponseData`, response identity, explicit
+  `error.response.raw` access, and response exclusion from `Exception.args`
+* message-only `str()`/`repr()` with fake response and context secrets excluded
+* native `json.JSONDecodeError` cause chaining, errors-subpackage export, and
+  continued top-level export absence
 * request-only and response-side safe contexts, missing responses, empty
   bodies, URL/header composition, echoed-credential scrubbing, JSON and `+json`
   media types, malformed/non-JSON/binary/large bodies, source immutability, and
@@ -118,9 +125,11 @@ Unit tests should cover isolated behavior such as:
   messages, safe context composition, response identity and raw-response path,
   attempt propagation, and private mapping export boundaries
 
-Future feature areas such as auth, retries, rate limits, decode errors, HTTPX
-transport mapping, sync/async client HTTP-error integration, `raise_for_status`,
-pagination, and observability should receive dedicated tests when implemented.
+Future feature areas such as auth, retries, rate limits, `ResponseData.json()`
+integration with `DecodeError`, safe package-generated decode diagnostics, HTTP
+error-payload parsing, HTTPX transport mapping, sync/async client HTTP-error integration,
+`raise_for_status`, pagination, and observability should receive dedicated tests
+when implemented.
 
 Unit tests should be fast, deterministic, and independent of external services.
 

@@ -8,6 +8,7 @@ from api_client_kit.errors import (
     AuthenticationError,
     AuthorizationError,
     ConflictError,
+    DecodeError,
     HttpStatusError,
     NetworkError,
     NotFoundError,
@@ -33,6 +34,7 @@ def test_errors_subpackage_exports_package_error_types() -> None:
         "ValidationError",
         "RateLimitError",
         "ServerError",
+        "DecodeError",
     )
     assert errors.ApiClientError is ApiClientError
     assert errors.NetworkError is NetworkError
@@ -45,6 +47,7 @@ def test_errors_subpackage_exports_package_error_types() -> None:
     assert errors.ValidationError is ValidationError
     assert errors.RateLimitError is RateLimitError
     assert errors.ServerError is ServerError
+    assert errors.DecodeError is DecodeError
 
 
 def test_top_level_package_does_not_export_error_types() -> None:
@@ -59,6 +62,7 @@ def test_top_level_package_does_not_export_error_types() -> None:
     assert not hasattr(api_client_kit, "ValidationError")
     assert not hasattr(api_client_kit, "RateLimitError")
     assert not hasattr(api_client_kit, "ServerError")
+    assert not hasattr(api_client_kit, "DecodeError")
 
 
 def test_safe_context_builder_remains_internal() -> None:
