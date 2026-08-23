@@ -13,13 +13,90 @@ from api_client_kit.errors import (
     AuthorizationError,
     ConflictError,
     HttpStatusError,
+    NetworkError,
     NotFoundError,
     RateLimitError,
     ServerError,
+    TimeoutError,  # noqa: A004
     ValidationError,
 )
 
 pytestmark = [pytest.mark.integration]
+
+
+def test_sync_client_maps_timeout_with_safe_request_context_and_cause() -> None:
+    captured: list[httpx.TransportError] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        original = httpx.ReadTimeout("low-level timeout detail", request=request)
+        captured.append(original)
+        raise original
+
+    client = SyncClient(base_url="https://api.example.test", transport=httpx.MockTransport(handler))
+
+    with pytest.raises(TimeoutError) as raised:
+        client.get(
+            "/items?token=test-query-secret&page=2",
+            headers={
+                "Authorization": "Bearer test-sync-transport-secret",
+                "X-Request-ID": "safe-id",
+            },
+        )
+
+    error = raised.value
+    assert type(error) is TimeoutError
+    assert str(error) == "HTTP request timed out"
+    assert repr(error) == "TimeoutError('HTTP request timed out')"
+    assert error.args == ("HTTP request timed out",)
+    assert error.__cause__ is captured[0]
+    assert error.context == {
+        "method": "GET",
+        "url": "https://api.example.test/items?token=<redacted>&page=2",
+        "request_headers": {"authorization": "<redacted>", "x-request-id": "safe-id"},
+        "attempt": 1,
+    }
+    assert not {"status_code", "response_headers", "body_snippet", "payload"} & set(error.context)
+    for secret in ("test-query-secret", "test-sync-transport-secret", "low-level timeout detail"):
+        assert secret not in str(error)
+        assert secret not in repr(error)
+        assert secret not in repr(error.context)
+
+
+def test_sync_client_maps_generic_transport_error_and_ignores_status_policy() -> None:
+    captured: list[httpx.TransportError] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        original = httpx.ConnectError("low-level connection detail", request=request)
+        captured.append(original)
+        raise original
+
+    client = SyncClient(
+        base_url="https://api.example.test",
+        raise_for_status=False,
+        transport=httpx.MockTransport(handler),
+    )
+
+    with pytest.raises(NetworkError) as raised:
+        client.get("/items")
+
+    error = raised.value
+    assert type(error) is NetworkError
+    assert str(error) == "HTTP transport failed"
+    assert repr(error) == "NetworkError('HTTP transport failed')"
+    assert error.args == ("HTTP transport failed",)
+    assert error.__cause__ is captured[0]
+
+
+def test_sync_client_propagates_unrelated_transport_handler_exception() -> None:
+    client = SyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(
+            lambda request: (_ for _ in ()).throw(RuntimeError("test bug"))
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="test bug"):
+        client.get("/items")
 
 
 def test_sync_client_request_exists() -> None:

@@ -145,6 +145,10 @@ Current implementation note:
   timeout through `resolve_timeout`.
 * `SyncClient.request()` builds an internal `RequestContext`.
 * `SyncClient.request()` sends the request through the internal `httpx.Client`.
+* `SyncClient.request()` maps `httpx.TransportError` through a shared private
+  transport mapper before response construction. `TimeoutException` becomes
+  `TimeoutError`; other transport errors become `NetworkError`, and the package
+  error is raised from the original HTTPX exception.
 * `SyncClient.request()` wraps the HTTPX response once as `ResponseData`.
 * When `raise_for_status` is true, `SyncClient.request()` passes that wrapper and
   its existing `RequestContext` to the internal status mapper, then raises the
@@ -373,6 +377,24 @@ The current transport layer handles request execution through:
 The package should not replace `httpx`.
 
 Instead, it should build API-client infrastructure around it.
+
+The shared internal transport taxonomy seam currently integrates only with the
+synchronous client:
+
+```text
+SyncClient.request()
+  ↓
+httpx.Client.request()
+  ├── response -> ResponseData -> status path
+  └── httpx.TransportError -> _transport_error_from_httpx
+       ├── TimeoutException -> TimeoutError
+       └── other TransportError -> NetworkError
+       ↓
+       raise package error from original cause
+```
+
+The helper is reusable by both clients, but async transport integration is not
+active yet.
 
 ## Future Retry and Backoff Layer
 

@@ -73,6 +73,27 @@ except DecodeError as error:
 The package error is the intended control-flow type; its message is safe and
 does not expose parser or server text.
 
+## Synchronous Transport Errors
+
+`SyncClient` normalizes HTTPX transport failures before any response exists:
+
+```text
+httpx.TimeoutException -> TimeoutError
+other httpx.TransportError -> NetworkError
+```
+
+The package messages are fixed (`HTTP request timed out` and `HTTP transport
+failed`), and the original HTTPX exception remains available as `error.__cause__`.
+That explicit cause is raw low-level diagnostic state and is not sanitized.
+Package error context contains only safe, request-side diagnostics. The
+`raise_for_status` setting controls HTTP response-status mapping only; it does
+not disable sync transport-error mapping. Async transport mapping is not active
+yet.
+
+```python
+from api_client_kit.errors import NetworkError, TimeoutError
+```
+
 ## Asynchronous Client
 
 ```python
@@ -127,7 +148,7 @@ handler and use the client's async context manager.
 ## Current Limitations
 
 The current client foundation intentionally does not yet implement auth
-plugins, transport-error integration, retries/backoff,
+plugins, asynchronous transport-error integration, retries/backoff,
 `Retry-After` handling, rate-limit handling, pagination helpers, or
 observability hooks and logging.
 

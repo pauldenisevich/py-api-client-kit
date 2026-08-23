@@ -12,6 +12,7 @@ from api_client_kit.client.models import RequestContext, ResponseData
 from api_client_kit.client.timeouts import TimeoutValue, resolve_timeout
 from api_client_kit.client.urls import join_url
 from api_client_kit.errors.mapping import _http_error_for_response
+from api_client_kit.errors.transport import _transport_error_from_httpx
 
 __all__ = ("SyncClient",)
 
@@ -120,15 +121,18 @@ class SyncClient:
             tags=tags,
         )
 
-        raw_response = self._client.request(
-            method=context.method,
-            url=context.url,
-            params=context.params,
-            headers=context.headers,
-            json=context.json,
-            data=context.data,
-            timeout=context.timeout,
-        )
+        try:
+            raw_response = self._client.request(
+                method=context.method,
+                url=context.url,
+                params=context.params,
+                headers=context.headers,
+                json=context.json,
+                data=context.data,
+                timeout=context.timeout,
+            )
+        except httpx.TransportError as exc:
+            raise _transport_error_from_httpx(exc, context) from exc
 
         response = ResponseData(raw=raw_response)
         if self._raise_for_status:

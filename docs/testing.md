@@ -138,9 +138,12 @@ Unit tests should cover isolated behavior such as:
   messages, safe context composition, response identity and raw-response path,
   attempt propagation, and private mapping export boundaries
 
-Future feature areas such as auth, retries, rate limits, HTTPX transport
+Future feature areas such as auth, retries, rate limits, async HTTPX transport
 mapping, pagination, and observability should receive dedicated tests when
-implemented. Sync and async integration cover default status raising, 2xx/3xx
+implemented. Sync transport coverage includes timeout and generic mapping,
+native cause chaining, request-only safe context, status-policy independence,
+unrelated-exception passthrough, and internal mapper taxonomy. Sync and async
+integration cover default status raising, 2xx/3xx
 `ResponseData` pass-through, exact mapped HTTP error taxonomy, disabled-policy
 4xx/5xx pass-through, safe diagnostic context, and `ResponseData`/raw-response
 ownership.
