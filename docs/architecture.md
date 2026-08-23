@@ -134,8 +134,7 @@ Current implementation note:
 * `timeout` is stored as the client default timeout.
 * `transport` can be injected for local tests.
 * `raise_for_status` is runtime-validated as a bool, retained as a read-only
-  property, and has matching sync/async configuration semantics. Sync request
-  execution uses this policy to construct package status errors.
+  property, and controls package status-error construction in both clients.
 * `SyncClient.request()` now exists as the first synchronous request execution
   path.
 * `SyncClient.request()` joins the configured `base_url` and request path
@@ -190,9 +189,11 @@ Current implementation note:
 * `AsyncClient.request()` builds an internal `RequestContext`.
 * `AsyncClient.request()` sends the request through the internal
   `httpx.AsyncClient`.
-* `AsyncClient.request()` returns `ResponseData`.
-* Non-2xx async responses currently return `ResponseData` without structured
-  package errors or status raising.
+* `AsyncClient.request()` wraps the HTTPX response once as `ResponseData`.
+* When `raise_for_status` is true, `AsyncClient.request()` passes that wrapper
+  and its existing `RequestContext` to the internal status mapper, then raises
+  the returned package error or returns the wrapper. When false, it returns the
+  wrapper for every HTTP status.
 * `AsyncClient.aclose()` exists and closes the underlying asynchronous
   `httpx.AsyncClient`.
 * `AsyncClient` supports `async with AsyncClient(...) as client`.
@@ -210,12 +211,8 @@ Current implementation note:
 * `get`, `delete`, and `head` cover normal params, headers, timeout,
   idempotency metadata, and tags usage without body-specific convenience
   parameters.
-* Async request execution still returns `ResponseData`.
-* Non-2xx async responses still return `ResponseData` without structured
-  package errors or status raising.
 * Request and convenience methods remain the asynchronous request path,
   including when used inside an async context manager.
-* Sync status errors are active; async status integration remains future work.
 * Retries, auth, rate limits, hooks, logging, and pagination remain future
   feature areas. Standalone redaction helpers do not run in the client request
   path yet.
@@ -413,8 +410,10 @@ Current implementation note:
   response.
 * `.json()` delegates parsing to `httpx.Response.json()` and translates its
   `json.JSONDecodeError` failures to `DecodeError`.
-* The internal status mapping constructs errors and safe diagnostics but is not
-  called by clients; status-error raising and richer decoding remain future work.
+* Both client request paths wrap an HTTPX response once as `ResponseData` and,
+  when `raise_for_status` is true, pass that wrapper and their existing
+  `RequestContext` to the internal status mapper. The mapper either returns a
+  package status error or `None`, allowing the same wrapper to be returned.
 
 Explicit JSON parsing is not Content-Type gated: valid JSON is returned even
 with missing or misleading media types. On failure, the flow is:
@@ -498,8 +497,8 @@ The exact mapping is 401 to `AuthenticationError`, 403 to
 `AuthorizationError`, 404 to `NotFoundError`, 409 to `ConflictError`, 422 to
 `ValidationError`, and 429 to `RateLimitError`. Statuses from 500 through 599
 map to `ServerError`; all other statuses at least 400 map to `HttpStatusError`.
-Statuses below 400 produce no error. The mapping is internal and is the active
-synchronous-client seam. The async client does not invoke it yet.
+Statuses below 400 produce no error. The mapping is internal and is shared by
+both client request paths.
 
 `DecodeError` directly subclasses `ApiClientError`, rather than
 `HttpStatusError`,
@@ -607,8 +606,8 @@ payload diagnostic is eligible only for `application/json` and
 already-sanitized bounded snippet, and is omitted if that parse fails. This
 best-effort enrichment never changes the mapped HTTP status error or produces a
 `DecodeError`. The mapping factory is not exported and constructs status errors
-with that context. `SyncClient` passes its existing request context and response
-wrapper to it when status raising is enabled; async integration remains pending.
+with that context. Both clients pass their existing request context and response
+wrapper to it when status raising is enabled.
 
 Future package structure may include modules such as:
 
@@ -681,6 +680,8 @@ Current sync and async parity applies to:
 * request execution through `httpx`
 * convenience methods
 * response wrapping
+* HTTP status mapping and disabled-policy pass-through
+* safe status diagnostics and response/raw-response ownership
 * lifecycle support
 
 Future sync and async parity should also apply to:
@@ -688,8 +689,6 @@ Future sync and async parity should also apply to:
 * auth behavior
 * retry behavior
 * rate-limit behavior
-* error mapping
-* redaction
 * pagination
 * hooks
 

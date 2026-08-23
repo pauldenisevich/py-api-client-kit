@@ -33,9 +33,9 @@ print(response.json())
 `put`, `patch`, `delete`, and `head`. Responses are returned as `ResponseData`
 with `status_code`, `headers`, `text`, `content`, and `json()`.
 
-`SyncClient` defaults to `raise_for_status=True`. Statuses below 400, including
-redirects, return `ResponseData`; statuses at least 400 raise the matching
-package error from `api_client_kit.errors`. For example, a 404 raises
+`SyncClient` and `AsyncClient` default to `raise_for_status=True`. Statuses
+below 400, including redirects, return `ResponseData`; statuses at least 400
+raise the matching package error from `api_client_kit.errors`. For example, a 404 raises
 `NotFoundError`, while a 5xx response raises `ServerError`.
 
 ```python
@@ -48,8 +48,7 @@ except NotFoundError as error:
 ```
 
 Pass `raise_for_status=False` when callers need `ResponseData` for every HTTP
-status, including 4xx and 5xx responses. `AsyncClient` currently continues to
-return `ResponseData` for all statuses.
+status, including 4xx and 5xx responses.
 
 ## JSON Decoding
 
@@ -128,11 +127,11 @@ handler and use the client's async context manager.
 ## Current Limitations
 
 The current client foundation intentionally does not yet implement auth
-plugins, HTTP status-error or transport-error integration, retries/backoff,
+plugins, transport-error integration, retries/backoff,
 `Retry-After` handling, rate-limit handling, pagination helpers, or
 observability hooks and logging.
 
-Non-2xx HTTP responses currently return `ResponseData`; package-level status
-errors are not implemented yet.
+Both clients map HTTP statuses at least 400 to package status errors by default;
+pass `raise_for_status=False` for explicit non-2xx pass-through.
 
 The package remains work in progress and is not ready for production use.

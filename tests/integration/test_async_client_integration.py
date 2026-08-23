@@ -8,6 +8,16 @@ import httpx
 import pytest
 from api_client_kit.client.async_client import AsyncClient
 from api_client_kit.client.models import ResponseData
+from api_client_kit.errors import (
+    AuthenticationError,
+    AuthorizationError,
+    ConflictError,
+    HttpStatusError,
+    NotFoundError,
+    RateLimitError,
+    ServerError,
+    ValidationError,
+)
 
 pytestmark = [pytest.mark.integration]
 
@@ -209,6 +219,7 @@ async def test_convenience_method_non_2xx_response_returns_response_data_without
     client = AsyncClient(
         base_url="https://api.example.test",
         transport=httpx.MockTransport(handler),
+        raise_for_status=False,
     )
 
     response = await client.get("/status")
@@ -497,6 +508,7 @@ async def test_non_2xx_response_returns_response_data_without_raising_status_err
     client = AsyncClient(
         base_url="https://api.example.test",
         transport=httpx.MockTransport(handler),
+        raise_for_status=False,
     )
 
     response = await client.request("GET", "/missing")
@@ -504,6 +516,121 @@ async def test_non_2xx_response_returns_response_data_without_raising_status_err
     assert isinstance(response, ResponseData)
     assert response.status_code == 404
     assert response.json() == {"error": "nope"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status_code", [200, 302])
+async def test_default_status_policy_returns_response_data_below_400(status_code: int) -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status_code)
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.get("/status")
+
+    assert isinstance(response, ResponseData)
+    assert response.status_code == status_code
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("status_code", "expected_type"),
+    [
+        (400, HttpStatusError),
+        (401, AuthenticationError),
+        (403, AuthorizationError),
+        (404, NotFoundError),
+        (409, ConflictError),
+        (422, ValidationError),
+        (429, RateLimitError),
+        (500, ServerError),
+        (503, ServerError),
+    ],
+)
+async def test_default_status_policy_raises_mapped_package_error(
+    status_code: int,
+    expected_type: type[HttpStatusError],
+) -> None:
+    raw_response = httpx.Response(status_code, json={"error": "failure"})
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return raw_response
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    with pytest.raises(expected_type) as raised:
+        await client.get("/status")
+
+    error = raised.value
+    assert type(error) is expected_type
+    assert error.response.status_code == status_code
+    assert error.response.raw is raw_response
+    if status_code == 404:
+        assert str(error) == "HTTP request failed with status 404"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status_code", [404, 500])
+async def test_disabled_status_policy_returns_error_response_data(status_code: int) -> None:
+    raw_response = httpx.Response(status_code, json={"error": "failure"})
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return raw_response
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        raise_for_status=False,
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.get("/status")
+
+    assert isinstance(response, ResponseData)
+    assert response.status_code == status_code
+    assert response.raw is raw_response
+    assert response.json() == {"error": "failure"}
+
+
+@pytest.mark.asyncio
+async def test_mapped_status_error_uses_safe_diagnostic_context() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            401,
+            headers={"Content-Type": "application/json", "Set-Cookie": "response-secret"},
+            json={"error": "unauthorized", "echo": "Bearer test-async-secret"},
+        )
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(handler),
+    )
+
+    with pytest.raises(AuthenticationError) as raised:
+        await client.get(
+            "/protected?token=test-query-secret&page=2",
+            headers={"Authorization": "Bearer test-async-secret", "X-Request-ID": "safe-id"},
+        )
+
+    error = raised.value
+    context = error.context
+    assert context is not None
+    assert context["method"] == "GET"
+    assert context["url"] == "https://api.example.test/protected?token=<redacted>&page=2"
+    assert context["request_headers"]["authorization"] == "<redacted>"
+    assert context["request_headers"]["x-request-id"] == "safe-id"
+    assert context["attempt"] == 1
+    assert context["status_code"] == 401
+    assert context["response_headers"]["set-cookie"] == "<redacted>"
+    assert context["body_snippet"] == '{"error":"unauthorized","echo":"<redacted>"}'
+    assert context["payload"] == {"error": "unauthorized", "echo": "<redacted>"}
+    assert "test-async-secret" not in repr(context)
+    assert "test-query-secret" not in repr(context)
 
 
 @pytest.mark.asyncio
