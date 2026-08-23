@@ -33,6 +33,24 @@ print(response.json())
 `put`, `patch`, `delete`, and `head`. Responses are returned as `ResponseData`
 with `status_code`, `headers`, `text`, `content`, and `json()`.
 
+`SyncClient` defaults to `raise_for_status=True`. Statuses below 400, including
+redirects, return `ResponseData`; statuses at least 400 raise the matching
+package error from `api_client_kit.errors`. For example, a 404 raises
+`NotFoundError`, while a 5xx response raises `ServerError`.
+
+```python
+from api_client_kit.errors import NotFoundError
+
+try:
+    response = client.get("/users/123")
+except NotFoundError as error:
+    response = error.response
+```
+
+Pass `raise_for_status=False` when callers need `ResponseData` for every HTTP
+status, including 4xx and 5xx responses. `AsyncClient` currently continues to
+return `ResponseData` for all statuses.
+
 ## JSON Decoding
 
 `ResponseData.json()` explicitly attempts to parse the response body as JSON; it

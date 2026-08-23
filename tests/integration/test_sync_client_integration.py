@@ -8,6 +8,16 @@ import httpx
 import pytest
 from api_client_kit.client.models import ResponseData
 from api_client_kit.client.sync_client import SyncClient
+from api_client_kit.errors import (
+    AuthenticationError,
+    AuthorizationError,
+    ConflictError,
+    HttpStatusError,
+    NotFoundError,
+    RateLimitError,
+    ServerError,
+    ValidationError,
+)
 
 pytestmark = [pytest.mark.integration]
 
@@ -177,6 +187,7 @@ def test_convenience_method_non_2xx_response_returns_response_data_without_raisi
     client = SyncClient(
         base_url="https://api.example.test",
         transport=httpx.MockTransport(lambda request: httpx.Response(503, json={"error": "busy"})),
+        raise_for_status=False,
     )
 
     response = client.get("/status")
@@ -440,6 +451,7 @@ def test_non_2xx_response_returns_response_data_without_raising_status_error() -
     client = SyncClient(
         base_url="https://api.example.test",
         transport=httpx.MockTransport(lambda request: httpx.Response(404, json={"error": "nope"})),
+        raise_for_status=False,
     )
 
     response = client.request("GET", "/missing")
@@ -447,6 +459,105 @@ def test_non_2xx_response_returns_response_data_without_raising_status_error() -
     assert isinstance(response, ResponseData)
     assert response.status_code == 404
     assert response.json() == {"error": "nope"}
+
+
+@pytest.mark.parametrize("status_code", [200, 302])
+def test_default_status_policy_returns_response_data_below_400(status_code: int) -> None:
+    client = SyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(lambda request: httpx.Response(status_code)),
+    )
+
+    response = client.get("/status")
+
+    assert isinstance(response, ResponseData)
+    assert response.status_code == status_code
+
+
+@pytest.mark.parametrize(
+    ("status_code", "expected_type"),
+    [
+        (400, HttpStatusError),
+        (401, AuthenticationError),
+        (403, AuthorizationError),
+        (404, NotFoundError),
+        (409, ConflictError),
+        (422, ValidationError),
+        (429, RateLimitError),
+        (500, ServerError),
+        (503, ServerError),
+    ],
+)
+def test_default_status_policy_raises_mapped_package_error(
+    status_code: int,
+    expected_type: type[HttpStatusError],
+) -> None:
+    raw_response = httpx.Response(status_code, json={"error": "failure"})
+    client = SyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(lambda request: raw_response),
+    )
+
+    with pytest.raises(expected_type) as raised:
+        client.get("/status")
+
+    error = raised.value
+    assert type(error) is expected_type
+    assert error.response.status_code == status_code
+    assert error.response.raw is raw_response
+    if status_code == 404:
+        assert str(error) == "HTTP request failed with status 404"
+
+
+@pytest.mark.parametrize("status_code", [404, 500])
+def test_disabled_status_policy_returns_error_response_data(status_code: int) -> None:
+    raw_response = httpx.Response(status_code, json={"error": "failure"})
+    client = SyncClient(
+        base_url="https://api.example.test",
+        raise_for_status=False,
+        transport=httpx.MockTransport(lambda request: raw_response),
+    )
+
+    response = client.get("/status")
+
+    assert isinstance(response, ResponseData)
+    assert response.status_code == status_code
+    assert response.raw is raw_response
+    assert response.json() == {"error": "failure"}
+
+
+def test_mapped_status_error_uses_safe_diagnostic_context() -> None:
+    client = SyncClient(
+        base_url="https://api.example.test",
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(
+                401,
+                headers={"Content-Type": "application/json", "Set-Cookie": "response-secret"},
+                json={"error": "unauthorized", "echo": "Bearer test-sync-secret"},
+            )
+        ),
+    )
+
+    with pytest.raises(AuthenticationError) as raised:
+        client.get(
+            "/protected?token=test-query-secret&page=2",
+            headers={"Authorization": "Bearer test-sync-secret", "X-Request-ID": "safe-id"},
+        )
+
+    error = raised.value
+    context = error.context
+    assert context is not None
+    assert context["method"] == "GET"
+    assert context["url"] == "https://api.example.test/protected?token=<redacted>&page=2"
+    assert context["request_headers"]["authorization"] == "<redacted>"
+    assert context["request_headers"]["x-request-id"] == "safe-id"
+    assert context["attempt"] == 1
+    assert context["status_code"] == 401
+    assert context["response_headers"]["set-cookie"] == "<redacted>"
+    assert context["body_snippet"] == '{"error":"unauthorized","echo":"<redacted>"}'
+    assert context["payload"] == {"error": "unauthorized", "echo": "<redacted>"}
+    assert "test-sync-secret" not in repr(context)
+    assert "test-query-secret" not in repr(context)
 
 
 def test_post_style_json_body_passes_through() -> None:

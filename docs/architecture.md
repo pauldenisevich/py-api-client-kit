@@ -134,8 +134,8 @@ Current implementation note:
 * `timeout` is stored as the client default timeout.
 * `transport` can be injected for local tests.
 * `raise_for_status` is runtime-validated as a bool, retained as a read-only
-  property, and has matching sync/async configuration semantics. Request
-  execution does not yet use this policy to construct package status errors.
+  property, and has matching sync/async configuration semantics. Sync request
+  execution uses this policy to construct package status errors.
 * `SyncClient.request()` now exists as the first synchronous request execution
   path.
 * `SyncClient.request()` joins the configured `base_url` and request path
@@ -146,9 +146,11 @@ Current implementation note:
   timeout through `resolve_timeout`.
 * `SyncClient.request()` builds an internal `RequestContext`.
 * `SyncClient.request()` sends the request through the internal `httpx.Client`.
-* `SyncClient.request()` returns `ResponseData`.
-* Non-2xx responses currently return `ResponseData` without structured package
-  errors or status raising.
+* `SyncClient.request()` wraps the HTTPX response once as `ResponseData`.
+* When `raise_for_status` is true, `SyncClient.request()` passes that wrapper and
+  its existing `RequestContext` to the internal status mapper, then raises the
+  returned package error or returns the wrapper. When false, it returns the
+  wrapper for every HTTP status.
 * `SyncClient.close()` exists and closes the underlying synchronous
   `httpx.Client`.
 * `SyncClient` supports `with SyncClient(...) as client`.
@@ -213,7 +215,7 @@ Current implementation note:
   package errors or status raising.
 * Request and convenience methods remain the asynchronous request path,
   including when used inside an async context manager.
-* Structured errors remain a future feature area.
+* Sync status errors are active; async status integration remains future work.
 * Retries, auth, rate limits, hooks, logging, and pagination remain future
   feature areas. Standalone redaction helpers do not run in the client request
   path yet.
@@ -496,8 +498,8 @@ The exact mapping is 401 to `AuthenticationError`, 403 to
 `AuthorizationError`, 404 to `NotFoundError`, 409 to `ConflictError`, 422 to
 `ValidationError`, and 429 to `RateLimitError`. Statuses from 500 through 599
 map to `ServerError`; all other statuses at least 400 map to `HttpStatusError`.
-Statuses below 400 produce no error. The mapping is internal and intended as the
-future shared sync/async seam, but clients do not invoke it yet.
+Statuses below 400 produce no error. The mapping is internal and is the active
+synchronous-client seam. The async client does not invoke it yet.
 
 `DecodeError` directly subclasses `ApiClientError`, rather than
 `HttpStatusError`,
@@ -605,7 +607,8 @@ payload diagnostic is eligible only for `application/json` and
 already-sanitized bounded snippet, and is omitted if that parse fails. This
 best-effort enrichment never changes the mapped HTTP status error or produces a
 `DecodeError`. The mapping factory is not exported and constructs status errors
-with that context, but it is not wired into clients.
+with that context. `SyncClient` passes its existing request context and response
+wrapper to it when status raising is enabled; async integration remains pending.
 
 Future package structure may include modules such as:
 

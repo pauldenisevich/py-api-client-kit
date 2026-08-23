@@ -6,8 +6,9 @@ This document defines the security and redaction principles for `api-client-kit`
 
 The project is currently under active early development. Reusable header,
 diagnostic-URL, structured-payload, and bounded body-snippet redaction
-primitives and the initial package error taxonomy are available; automatic safe
-diagnostic integration remains future work.
+primitives and the initial package error taxonomy are available. `SyncClient`
+uses safe diagnostic integration for mapped HTTP status errors when
+`raise_for_status=True`; async client status integration remains future work.
 
 Current public usage:
 
@@ -72,8 +73,8 @@ When uncertain, prefer redaction.
 `redact_headers` returns a new `httpx.Headers` collection with sensitive values
 replaced by `<redacted>`. It recognizes the eight approved names listed below
 with exact, case-insensitive matching, preserves safe and repeated headers, and
-does not mutate its input. Clients, errors, logs, and hooks do not
-automatically invoke it yet.
+does not mutate its input. Logs and hooks do not automatically invoke it yet;
+synchronous mapped HTTP status errors use it while building safe context.
 
 Headers that should be redacted include:
 
@@ -106,7 +107,8 @@ approved names below with exact, case-insensitive matching on decoded query
 names, replaces valued sensitive parameters with `<redacted>`, preserves
 repeated parameters and safe query text where practical, redacts URL userinfo,
 and strips fragments. It does not mutate its input. It is a standalone helper;
-clients, errors, logs, and hooks do not automatically invoke it yet.
+logs and hooks do not automatically invoke it yet. Synchronous mapped HTTP
+status errors use it while building safe context.
 
 Query parameters that should be redacted include:
 
@@ -227,8 +229,8 @@ Malformed JSON falls back to plain text without key-based heuristics. Larger
 bodies skip structured parsing and use the bounded text path.
 
 The internal HTTP status mapping uses `safe_body_snippet` through the safe
-context builder. Clients, logs, and hooks do not automatically invoke it yet.
-Client integration, logging hooks, and observability hooks remain future work.
+context builder. `SyncClient` invokes that mapping when status raising is
+enabled; logging hooks and observability hooks remain future work.
 
 ## Internal Safe Diagnostic Context
 
@@ -281,8 +283,9 @@ diagnostic context comes only from `_build_error_context`. Original
 `ResponseData` stays explicit structured state, and raw HTTPX access remains
 only `error.response.raw`. The mapping emits no logs or events. A 429 adds only
 `RateLimitError` classification, and a 5xx adds only `ServerError`
-classification—neither adds waiting, retry, or rate-limit semantics. Clients do
-not invoke the mapping yet, so they do not yet raise these errors.
+classification—neither adds waiting, retry, or rate-limit semantics.
+`SyncClient` invokes the mapping when `raise_for_status=True`; `AsyncClient`
+does not yet invoke it.
 
 `ResponseData.json()` translates standard JSON parser failures into `DecodeError`
 with the fixed package-controlled message `Failed to decode response as JSON`.

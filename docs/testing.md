@@ -139,9 +139,11 @@ Unit tests should cover isolated behavior such as:
   attempt propagation, and private mapping export boundaries
 
 Future feature areas such as auth, retries, rate limits, HTTPX transport
-mapping, sync/async client HTTP-error integration,
-`raise_for_status`, pagination, and observability should receive dedicated tests
-when implemented.
+mapping, async client HTTP-error integration, pagination, and observability
+should receive dedicated tests when implemented. Sync integration covers default
+status raising, 2xx/3xx `ResponseData` pass-through, mapped HTTP error taxonomy,
+disabled-policy 4xx/5xx pass-through, safe diagnostic context, and
+`ResponseData`/raw-response ownership.
 
 Unit tests should be fast, deterministic, and independent of external services.
 

@@ -11,6 +11,7 @@ from api_client_kit.client.headers import merge_headers
 from api_client_kit.client.models import RequestContext, ResponseData
 from api_client_kit.client.timeouts import TimeoutValue, resolve_timeout
 from api_client_kit.client.urls import join_url
+from api_client_kit.errors.mapping import _http_error_for_response
 
 __all__ = ("SyncClient",)
 
@@ -119,7 +120,7 @@ class SyncClient:
             tags=tags,
         )
 
-        response = self._client.request(
+        raw_response = self._client.request(
             method=context.method,
             url=context.url,
             params=context.params,
@@ -129,7 +130,13 @@ class SyncClient:
             timeout=context.timeout,
         )
 
-        return ResponseData(raw=response)
+        response = ResponseData(raw=raw_response)
+        if self._raise_for_status:
+            error = _http_error_for_response(response, context)
+            if error is not None:
+                raise error
+
+        return response
 
     def get(
         self,
