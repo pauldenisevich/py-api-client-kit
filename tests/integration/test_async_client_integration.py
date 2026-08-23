@@ -12,6 +12,7 @@ from api_client_kit.errors import (
     AuthenticationError,
     AuthorizationError,
     ConflictError,
+    DecodeError,
     HttpStatusError,
     NetworkError,
     NotFoundError,
@@ -666,7 +667,11 @@ async def test_default_status_policy_raises_mapped_package_error(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("status_code", [404, 500])
 async def test_disabled_status_policy_returns_error_response_data(status_code: int) -> None:
-    raw_response = httpx.Response(status_code, json={"error": "failure"})
+    raw_response = httpx.Response(
+        status_code,
+        headers={"Content-Type": "application/json", "X-Test-Header": "visible"},
+        content=b'{"error":"failure"}',
+    )
 
     async def handler(request: httpx.Request) -> httpx.Response:
         return raw_response
@@ -682,7 +687,39 @@ async def test_disabled_status_policy_returns_error_response_data(status_code: i
     assert isinstance(response, ResponseData)
     assert response.status_code == status_code
     assert response.raw is raw_response
+    assert response.headers["x-test-header"] == "visible"
+    assert response.text == '{"error":"failure"}'
+    assert response.content == b'{"error":"failure"}'
     assert response.json() == {"error": "failure"}
+
+
+@pytest.mark.asyncio
+async def test_disabled_status_policy_defers_malformed_json_decode_error() -> None:
+    malformed_content = b'{"error":'
+    raw_response = httpx.Response(
+        500,
+        headers={"Content-Type": "application/json"},
+        content=malformed_content,
+    )
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        return raw_response
+
+    client = AsyncClient(
+        base_url="https://api.example.test",
+        raise_for_status=False,
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.get("/status")
+
+    assert isinstance(response, ResponseData)
+    assert response.status_code == 500
+    assert response.content == malformed_content
+    assert response.raw is raw_response
+    with pytest.raises(DecodeError) as raised:
+        response.json()
+    assert raised.value.response is response
 
 
 @pytest.mark.asyncio

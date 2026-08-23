@@ -12,6 +12,7 @@ from api_client_kit.errors import (
     AuthenticationError,
     AuthorizationError,
     ConflictError,
+    DecodeError,
     HttpStatusError,
     NetworkError,
     NotFoundError,
@@ -588,7 +589,11 @@ def test_default_status_policy_raises_mapped_package_error(
 
 @pytest.mark.parametrize("status_code", [404, 500])
 def test_disabled_status_policy_returns_error_response_data(status_code: int) -> None:
-    raw_response = httpx.Response(status_code, json={"error": "failure"})
+    raw_response = httpx.Response(
+        status_code,
+        headers={"Content-Type": "application/json", "X-Test-Header": "visible"},
+        content=b'{"error":"failure"}',
+    )
     client = SyncClient(
         base_url="https://api.example.test",
         raise_for_status=False,
@@ -600,7 +605,34 @@ def test_disabled_status_policy_returns_error_response_data(status_code: int) ->
     assert isinstance(response, ResponseData)
     assert response.status_code == status_code
     assert response.raw is raw_response
+    assert response.headers["x-test-header"] == "visible"
+    assert response.text == '{"error":"failure"}'
+    assert response.content == b'{"error":"failure"}'
     assert response.json() == {"error": "failure"}
+
+
+def test_disabled_status_policy_defers_malformed_json_decode_error() -> None:
+    malformed_content = b'{"error":'
+    raw_response = httpx.Response(
+        500,
+        headers={"Content-Type": "application/json"},
+        content=malformed_content,
+    )
+    client = SyncClient(
+        base_url="https://api.example.test",
+        raise_for_status=False,
+        transport=httpx.MockTransport(lambda request: raw_response),
+    )
+
+    response = client.get("/status")
+
+    assert isinstance(response, ResponseData)
+    assert response.status_code == 500
+    assert response.content == malformed_content
+    assert response.raw is raw_response
+    with pytest.raises(DecodeError) as raised:
+        response.json()
+    assert raised.value.response is response
 
 
 def test_mapped_status_error_uses_safe_diagnostic_context() -> None:

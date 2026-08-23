@@ -48,7 +48,12 @@ except NotFoundError as error:
 ```
 
 Pass `raise_for_status=False` when callers need `ResponseData` for every HTTP
-status, including 4xx and 5xx responses.
+status, including 4xx and 5xx responses. This disables only HTTP
+status-to-exception conversion: status, headers, text, content, JSON decoding,
+and the raw HTTPX response remain available on the returned `ResponseData`.
+Transport failures still map to `NetworkError` or `TimeoutError`, and an
+explicit `ResponseData.json()` call can still raise `DecodeError` for malformed
+JSON.
 
 ## JSON Decoding
 

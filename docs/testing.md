@@ -145,8 +145,11 @@ request-only safe context, status-policy independence, unrelated-exception
 passthrough, and shared mapper taxonomy. Sync and async integration cover
 default status raising, 2xx/3xx
 `ResponseData` pass-through, exact mapped HTTP error taxonomy, disabled-policy
-4xx/5xx pass-through, safe diagnostic context, and `ResponseData`/raw-response
-ownership.
+4xx/5xx pass-through, preserved response accessors and raw-response ownership,
+safe diagnostic context, status-policy-independent transport mapping, and
+malformed disabled-policy responses that return `ResponseData` until an explicit
+`.json()` call raises `DecodeError`. These behaviors are covered symmetrically
+for sync and async clients.
 
 Unit tests should be fast, deterministic, and independent of external services.
 

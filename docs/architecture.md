@@ -239,7 +239,11 @@ HTTPX request
   │      -> raised from original cause
   └── response
          -> ResponseData
-         -> optional status mapping
+         ├── raise_for_status=True -> optional HttpStatusError hierarchy
+         └── raise_for_status=False -> ResponseData directly
+
+later explicit ResponseData.json()
+  └── malformed JSON -> DecodeError
 ```
 
 The `api_client_kit.client` subpackage now exports the stable public
