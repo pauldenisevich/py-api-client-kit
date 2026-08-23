@@ -242,6 +242,11 @@ Bodies remain bounded. A structured payload is attempted only for JSON or
 `+json` media types and only by parsing already-sanitized bounded body output.
 Malformed JSON omits payload enrichment; binary bodies use a safe marker and
 oversized bodies remain bounded. Missing responses omit response-only fields.
+This payload is diagnostic only: malformed diagnostic JSON never masks the
+primary HTTP status error or raises `DecodeError`, and non-JSON responses retain
+only their safe body snippet. Nested sensitive keys and echoed known request
+secrets remain redacted because extraction reuses the same sanitized body
+representation; the raw full body is not reparsed to recover a payload.
 The context is internal and is not automatically logged; it adds no request-ID,
 correlation-ID, or vendor-trace heuristics.
 

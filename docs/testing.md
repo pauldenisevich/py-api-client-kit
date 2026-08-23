@@ -125,14 +125,18 @@ Unit tests should cover isolated behavior such as:
   bodies, URL/header composition, echoed-credential scrubbing, JSON and `+json`
   media types, malformed/non-JSON/binary/large bodies, source immutability, and
   private export boundaries
+* status-error structured payload diagnostics for JSON objects, arrays, scalars,
+  and null; nested sensitive fields; JSON parameters and `+json` media types;
+  malformed JSON retaining the primary status error; plain-text, empty, and
+  bounded large bodies; and known request-secret echo scrubbing
 * explicit status mappings, generic 4xx mapping, 500–599 server mapping, and
   499/500/599/600 boundaries
 * non-error and redirect `None` behavior, exact deterministic status-only
   messages, safe context composition, response identity and raw-response path,
   attempt propagation, and private mapping export boundaries
 
-Future feature areas such as auth, retries, rate limits, HTTP error-payload
-parsing, HTTPX transport mapping, sync/async client HTTP-error integration,
+Future feature areas such as auth, retries, rate limits, HTTPX transport
+mapping, sync/async client HTTP-error integration,
 `raise_for_status`, pagination, and observability should receive dedicated tests
 when implemented.
 

@@ -597,8 +597,12 @@ The builder
 accepts `RequestContext`, an optional HTTP response, and an attempt number; it
 returns sanitized request diagnostics, response status, headers, a bounded body
 snippet, and optional structured JSON diagnostics when a response exists. The
-mapping factory is not exported and constructs status errors with that context,
-but it is not wired into clients.
+payload diagnostic is eligible only for `application/json` and
+`application/*+json` media types (including parameters), is parsed from the
+already-sanitized bounded snippet, and is omitted if that parse fails. This
+best-effort enrichment never changes the mapped HTTP status error or produces a
+`DecodeError`. The mapping factory is not exported and constructs status errors
+with that context, but it is not wired into clients.
 
 Future package structure may include modules such as:
 

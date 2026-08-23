@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import httpx
 import pytest
 from api_client_kit.client.models import RequestContext, ResponseData
@@ -156,3 +158,94 @@ def test_mapping_composes_safe_context_and_propagates_attempt() -> None:
     assert fake_request_value not in rendered
     assert fake_query_value not in rendered
     assert "test-body-secret" not in rendered
+
+
+@pytest.mark.parametrize(
+    ("content_type", "payload"),
+    [
+        (
+            "application/json; charset=utf-8",
+            {
+                "error": "invalid",
+                "password": "test-secret",
+                "details": {"token": "test-nested-secret"},
+            },
+        ),
+        ("application/problem+json", ["invalid", 1]),
+        ("application/vnd.example+json", "invalid"),
+        ("application/json", None),
+    ],
+)
+def test_mapping_adds_safe_payload_for_all_json_diagnostic_shapes(
+    content_type: str, payload: object
+) -> None:
+    error = _http_error_for_response(
+        ResponseData(
+            raw=httpx.Response(
+                400,
+                headers={"Content-Type": content_type},
+                content=json.dumps(payload),
+            )
+        ),
+        RequestContext(method="GET", url="https://api.example.test/items"),
+    )
+
+    assert type(error) is HttpStatusError
+    assert error is not None
+    assert error.context is not None
+    assert error.context["payload"] == (
+        {
+            "error": "invalid",
+            "password": "<redacted>",
+            "details": {"token": "<redacted>"},
+        }
+        if isinstance(payload, dict)
+        else payload
+    )
+
+
+def test_malformed_json_diagnostics_do_not_replace_the_primary_status_error() -> None:
+    error = _http_error_for_response(
+        ResponseData(
+            raw=httpx.Response(
+                500,
+                headers={"Content-Type": "application/problem+json"},
+                content=b'{"error":',
+            )
+        ),
+        RequestContext(method="GET", url="https://api.example.test/items"),
+    )
+
+    assert type(error) is ServerError
+    assert error is not None
+    assert error.context is not None
+    assert error.context["body_snippet"] == '{"error":'
+    assert "payload" not in error.context
+
+
+@pytest.mark.parametrize(
+    ("status_code", "headers", "content", "expected_snippet"),
+    [
+        (400, {"Content-Type": "text/plain"}, b'{"error":"safe"}', '{"error":"safe"}'),
+        (404, {}, b"", "<empty>"),
+        (500, {"Content-Type": "application/json"}, b'{"safe":"' + b"a" * 2_000 + b'"}', None),
+    ],
+)
+def test_mapping_omits_non_diagnostic_payloads_and_preserves_status_errors(
+    status_code: int,
+    headers: dict[str, str],
+    content: bytes,
+    expected_snippet: str | None,
+) -> None:
+    error = _http_error_for_response(
+        ResponseData(raw=httpx.Response(status_code, headers=headers, content=content)),
+        RequestContext(method="GET", url="https://api.example.test/items"),
+    )
+
+    assert error is not None
+    assert error.context is not None
+    assert "payload" not in error.context
+    if expected_snippet is None:
+        assert str(error.context["body_snippet"]).endswith("…<truncated>")
+    else:
+        assert error.context["body_snippet"] == expected_snippet
