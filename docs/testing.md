@@ -13,8 +13,8 @@ header merging, timeout resolution, sync/async client foundations, header
 redaction, fragment-safe URL/query/userinfo redaction, recursive payload
 redaction, bounded body snippets, the current package error taxonomy, internal
 safe diagnostic-context construction, and internal HTTP status-to-exception
-mapping. As runtime functionality is added, every feature should include focused
-tests.
+mapping, including sync/async transport-error normalization. As runtime
+functionality is added, every feature should include focused tests.
 
 ## Test Goals
 
@@ -138,12 +138,12 @@ Unit tests should cover isolated behavior such as:
   messages, safe context composition, response identity and raw-response path,
   attempt propagation, and private mapping export boundaries
 
-Future feature areas such as auth, retries, rate limits, async HTTPX transport
-mapping, pagination, and observability should receive dedicated tests when
-implemented. Sync transport coverage includes timeout and generic mapping,
-native cause chaining, request-only safe context, status-policy independence,
-unrelated-exception passthrough, and internal mapper taxonomy. Sync and async
-integration cover default status raising, 2xx/3xx
+Future feature areas such as auth, retries, rate limits, pagination, and
+observability should receive dedicated tests when implemented. Sync and async
+transport coverage includes timeout and generic mapping, native cause chaining,
+request-only safe context, status-policy independence, unrelated-exception
+passthrough, and shared mapper taxonomy. Sync and async integration cover
+default status raising, 2xx/3xx
 `ResponseData` pass-through, exact mapped HTTP error taxonomy, disabled-policy
 4xx/5xx pass-through, safe diagnostic context, and `ResponseData`/raw-response
 ownership.

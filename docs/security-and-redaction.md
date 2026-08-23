@@ -268,13 +268,12 @@ The base error does not sanitize arbitrary caller-supplied context.
 the message-only `str()` and class-plus-message `repr()` behavior, so optional
 context is not automatically rendered. They do not store raw underlying
 transport exceptions as fields; native `raise ... from ...` chaining is the
-intended cause mechanism. `SyncClient` maps HTTPX transport errors with fixed
-package-controlled messages and a request-only context built through the
-existing sanitization path. No response-side diagnostics exist when no response
-was received, and HTTPX exception text is not copied into the package message.
-The explicit `error.__cause__` remains raw low-level debugging state and must
-not be treated as sanitized package output. Async transport mapping is not
-active yet.
+intended cause mechanism. `SyncClient` and `AsyncClient` map HTTPX transport
+errors with fixed package-controlled messages and a request-only context built
+through the existing sanitization path. No response-side diagnostics exist when
+no response was received, and HTTPX exception text is not copied into the
+package message. The explicit `error.__cause__` remains raw low-level debugging
+state and must not be treated as sanitized package output.
 
 `HttpStatusError` and its specialized HTTP status subclasses are also current
 package error types. An HTTP status error stores package `ResponseData`, with
