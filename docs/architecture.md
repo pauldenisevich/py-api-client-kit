@@ -127,12 +127,15 @@ The public client layer should be small and predictable. It should not hide comp
 Current implementation note:
 
 * `SyncClient` exists in `api_client_kit.client.sync_client`.
-* The `SyncClient` constructor supports `base_url`, `headers`, `timeout`, and
-  `transport`.
+* The `SyncClient` constructor supports `base_url`, `headers`, `timeout`,
+  `transport`, and a client-level `raise_for_status: bool = True` policy.
 * `base_url` is canonicalized and validated through `join_url`.
 * `headers` are stored as client default headers for future requests.
 * `timeout` is stored as the client default timeout.
 * `transport` can be injected for local tests.
+* `raise_for_status` is runtime-validated as a bool, retained as a read-only
+  property, and has matching sync/async configuration semantics. Request
+  execution does not yet use this policy to construct package status errors.
 * `SyncClient.request()` now exists as the first synchronous request execution
   path.
 * `SyncClient.request()` joins the configured `base_url` and request path
@@ -165,8 +168,8 @@ Current implementation note:
 * Request and convenience methods remain the synchronous request path, including
   when used inside a sync context manager.
 * `AsyncClient` exists in `api_client_kit.client.async_client`.
-* The `AsyncClient` constructor supports `base_url`, `headers`, `timeout`, and
-  `transport`.
+* The `AsyncClient` constructor supports `base_url`, `headers`, `timeout`,
+  `transport`, and the same client-level `raise_for_status: bool = True` policy.
 * `AsyncClient` canonicalizes and validates `base_url` through `join_url`.
 * `AsyncClient` stores `headers` as async client default headers for requests.
 * `AsyncClient` stores `timeout` as the async client default timeout for

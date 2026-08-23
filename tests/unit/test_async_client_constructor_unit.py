@@ -119,6 +119,32 @@ def test_async_client_stores_injected_async_transport() -> None:
     assert client._transport is transport
 
 
+def test_async_client_raise_for_status_defaults_to_true() -> None:
+    client = AsyncClient(base_url="https://api.example.test")
+
+    assert client.raise_for_status is True
+
+
+@pytest.mark.parametrize("value", [True, False])
+def test_async_client_stores_explicit_raise_for_status(value: bool) -> None:
+    client = AsyncClient(base_url="https://api.example.test", raise_for_status=value)
+
+    assert client.raise_for_status is value
+
+
+@pytest.mark.parametrize("value", [None, 0, 1, "false"])
+def test_async_client_rejects_non_bool_raise_for_status(value: object) -> None:
+    with pytest.raises(TypeError, match=r"^raise_for_status must be bool$"):
+        AsyncClient(base_url="https://api.example.test", raise_for_status=value)  # type: ignore[arg-type]
+
+
+def test_async_client_raise_for_status_is_read_only() -> None:
+    client = AsyncClient(base_url="https://api.example.test")
+
+    with pytest.raises(AttributeError):
+        client.raise_for_status = False  # type: ignore[misc]
+
+
 def test_async_client_creates_internal_httpx_async_client() -> None:
     client = AsyncClient(base_url="https://api.example.test")
 

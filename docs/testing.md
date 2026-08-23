@@ -80,6 +80,9 @@ Unit tests should cover isolated behavior such as:
 * request context normalization
 * response wrapper accessors
 * timeout resolution
+* sync and async client `raise_for_status` configuration defaults, explicit
+  boolean values, non-bool rejection with the exact validation message, and
+  read-only property behavior
 * header redaction
 * URL/query/userinfo redaction and fragment-safe diagnostic URL handling
 * recursive payload redaction through Mapping/list/tuple nesting

@@ -32,11 +32,16 @@ class AsyncClient:
         headers: Mapping[str, str] | httpx.Headers | None = None,
         timeout: TimeoutValue = 5.0,
         transport: httpx.AsyncBaseTransport | None = None,
+        raise_for_status: bool = True,
     ) -> None:
+        if not isinstance(raise_for_status, bool):
+            raise TypeError("raise_for_status must be bool")
+
         self._base_url = join_url(base_url)
         self._default_headers = httpx.Headers(headers or {})
         self._timeout = timeout
         self._transport = transport
+        self._raise_for_status = raise_for_status
         self._client = httpx.AsyncClient(transport=transport)
 
     @property
@@ -53,6 +58,11 @@ class AsyncClient:
     def timeout(self) -> TimeoutValue:
         """Configured default request timeout."""
         return self._timeout
+
+    @property
+    def raise_for_status(self) -> bool:
+        """Configured HTTP status error policy."""
+        return self._raise_for_status
 
     async def aclose(self) -> None:
         """Close the underlying asynchronous HTTP client."""

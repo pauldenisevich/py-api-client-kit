@@ -110,6 +110,32 @@ def test_sync_client_stores_injected_transport() -> None:
     assert client._transport is transport
 
 
+def test_sync_client_raise_for_status_defaults_to_true() -> None:
+    client = SyncClient(base_url="https://api.example.test")
+
+    assert client.raise_for_status is True
+
+
+@pytest.mark.parametrize("value", [True, False])
+def test_sync_client_stores_explicit_raise_for_status(value: bool) -> None:
+    client = SyncClient(base_url="https://api.example.test", raise_for_status=value)
+
+    assert client.raise_for_status is value
+
+
+@pytest.mark.parametrize("value", [None, 0, 1, "false"])
+def test_sync_client_rejects_non_bool_raise_for_status(value: object) -> None:
+    with pytest.raises(TypeError, match=r"^raise_for_status must be bool$"):
+        SyncClient(base_url="https://api.example.test", raise_for_status=value)  # type: ignore[arg-type]
+
+
+def test_sync_client_raise_for_status_is_read_only() -> None:
+    client = SyncClient(base_url="https://api.example.test")
+
+    with pytest.raises(AttributeError):
+        client.raise_for_status = False  # type: ignore[misc]
+
+
 def test_sync_client_creates_internal_httpx_client() -> None:
     client = SyncClient(base_url="https://api.example.test")
 
