@@ -279,14 +279,19 @@ only `error.response.raw`. The mapping emits no logs or events. A 429 adds only
 classification—neither adds waiting, retry, or rate-limit semantics. Clients do
 not invoke the mapping yet, so they do not yet raise these errors.
 
-`DecodeError` is a current package error type for failures while decoding an
-existing package `ResponseData`. It retains that wrapper by identity, with raw
-HTTPX access explicit only through `error.response.raw`. Attaching a response
-does not sanitize it, but raw response/body data and optional context do not
-automatically enter `str()` or `repr()`. Arbitrary caller-supplied context is
-not automatically sanitized. `ResponseData.json()` does not yet translate parser
-failures into `DecodeError`; safe package-generated decode diagnostics remain
-future work.
+`ResponseData.json()` translates standard JSON parser failures into `DecodeError`
+with the fixed package-controlled message `Failed to decode response as JSON`.
+Raw parser and server text never enters that automatic message. Its failure
+context contains only status code, content type, and a `safe_body_snippet`; an
+attached request additionally contributes method and a sanitized URL. The raw
+body, raw URL, request-header map, and response-header map are not retained in
+that context.
+
+When an attached request exists, known sensitive request header, query, and
+userinfo values are supplied to body scrubbing so server echoes are redacted.
+Without an attached request, no heuristic secret discovery is attempted.
+Successful parsed JSON is functional application data, not a diagnostic: it is
+returned unchanged and is never redacted.
 
 Future structured errors should include useful context without exposing secrets.
 

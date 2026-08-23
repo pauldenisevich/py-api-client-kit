@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
 import httpx
+
+from api_client_kit.errors.context import _build_decode_error_context
+from api_client_kit.errors.decode import DecodeError
 
 __all__ = ("RequestOptions", "ResponseData")
 
@@ -68,4 +72,11 @@ class ResponseData:
         return self.raw.content
 
     def json(self) -> Any:
-        return self.raw.json()
+        try:
+            return self.raw.json()
+        except json.JSONDecodeError as exc:
+            raise DecodeError(
+                "Failed to decode response as JSON",
+                response=self,
+                context=_build_decode_error_context(self),
+            ) from exc

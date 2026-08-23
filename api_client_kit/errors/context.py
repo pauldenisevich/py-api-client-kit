@@ -13,7 +13,7 @@ from api_client_kit.redaction.urls import _sensitive_url_values, redact_url
 if TYPE_CHECKING:
     import httpx
 
-    from api_client_kit.client.models import RequestContext
+    from api_client_kit.client.models import RequestContext, ResponseData
 
 
 def _build_error_context(
@@ -48,6 +48,35 @@ def _build_error_context(
     if _is_json_media_type(response.headers.get("content-type")):
         with suppress(json.JSONDecodeError):
             context["payload"] = json.loads(body_snippet)
+    return context
+
+
+def _build_decode_error_context(response: ResponseData) -> dict[str, object]:
+    """Build safe diagnostics for a failed explicit response JSON decode."""
+    raw_response = response.raw
+    context: dict[str, object] = {
+        "status_code": response.status_code,
+        "content_type": response.headers.get("content-type"),
+    }
+    try:
+        raw_request = raw_response.request
+    except RuntimeError:
+        context["body_snippet"] = safe_body_snippet(response.content)
+        return context
+
+    known_request_secrets = (
+        *_sensitive_header_values(raw_request.headers),
+        *_sensitive_url_values(raw_request.url),
+    )
+    context.update(
+        {
+            "method": raw_request.method,
+            "url": redact_url(raw_request.url),
+            "body_snippet": safe_body_snippet(
+                response.content, secret_values=known_request_secrets
+            ),
+        }
+    )
     return context
 
 

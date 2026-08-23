@@ -406,13 +406,29 @@ Current implementation note:
 * It exposes `status_code`, `headers`, `text`, `content`, and `json()`.
 * `status_code`, `headers`, `text`, and `content` delegate directly to the raw
   response.
-* `.json()` delegates directly to `httpx.Response.json()`.
-* `DecodeError` exists for package-defined failures while decoding an existing
-  response, but `.json()` does not yet raise it.
+* `.json()` delegates parsing to `httpx.Response.json()` and translates its
+  `json.JSONDecodeError` failures to `DecodeError`.
 * The internal status mapping constructs errors and safe diagnostics but is not
   called by clients; status-error raising and richer decoding remain future work.
 
-Detailed decoding behavior should be documented once implemented.
+Explicit JSON parsing is not Content-Type gated: valid JSON is returned even
+with missing or misleading media types. On failure, the flow is:
+
+```text
+ResponseData.json()
+        ↓
+httpx.Response.json()
+        ├── success → actual parsed JSON value
+        └── JSONDecodeError
+                ↓
+         internal safe decode context
+                ↓
+         DecodeError from the original cause
+```
+
+Decode context always contains `status_code`, `content_type`, and a bounded
+`body_snippet`; an attached HTTPX request additionally supplies `method` and a
+sanitized `url`. Content type is diagnostic only.
 
 ## Current Redaction Primitives and Error Foundation
 
@@ -486,17 +502,16 @@ because decoding failures are independent of status classification. It requires
 the package `ResponseData` wrapper and retains the supplied wrapper by identity.
 The explicit raw HTTPX path is `error.response.raw`. Neither the attached response
 nor optional context is included in automatic `str()` or `repr()` output.
-`ResponseData.json()` continues to delegate directly to HTTPX and does not yet
-raise `DecodeError`; safe package-generated decode context is future work.
+`ResponseData.json()` uses `DecodeError` as its stable package failure contract
+for standard-library `json.JSONDecodeError` parser failures. It preserves the
+same package response by identity and chains the original parser exception.
 
 Future error concepts:
 
 * HTTPX-to-package transport mapping and client integration
-* decode integration and safe package-generated decode diagnostics
 
-Decode integration and HTTPX-to-package transport mapping remain future work.
-Clients do not raise package errors yet, and client/error integration remains
-future work.
+HTTPX-to-package transport mapping and client/error integration remain future
+work.
 
 ## Future Pagination Layer
 
@@ -583,7 +598,7 @@ accepts `RequestContext`, an optional HTTP response, and an attempt number; it
 returns sanitized request diagnostics, response status, headers, a bounded body
 snippet, and optional structured JSON diagnostics when a response exists. The
 mapping factory is not exported and constructs status errors with that context,
-but it is not wired into clients; decode integration remains future work.
+but it is not wired into clients.
 
 Future package structure may include modules such as:
 

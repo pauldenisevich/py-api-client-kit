@@ -33,6 +33,29 @@ print(response.json())
 `put`, `patch`, `delete`, and `head`. Responses are returned as `ResponseData`
 with `status_code`, `headers`, `text`, `content`, and `json()`.
 
+## JSON Decoding
+
+`ResponseData.json()` explicitly attempts to parse the response body as JSON; it
+does not gate parsing on `Content-Type` or status code. Valid JSON returns its
+actual Python value, including objects, arrays, scalars, and `null`. Valid JSON
+therefore still parses when the media type is missing or misleading.
+
+Invalid JSON, an empty body, and plain-text/non-JSON content raise the stable
+package `DecodeError` when `.json()` is called:
+
+```python
+from api_client_kit.errors import DecodeError
+
+try:
+    payload = response.json()
+except DecodeError as error:
+    # The original json.JSONDecodeError is available as error.__cause__.
+    payload = None
+```
+
+The package error is the intended control-flow type; its message is safe and
+does not expose parser or server text.
+
 ## Asynchronous Client
 
 ```python
@@ -87,9 +110,9 @@ handler and use the client's async context manager.
 ## Current Limitations
 
 The current client foundation intentionally does not yet implement auth
-plugins, structured package errors, redaction, retries/backoff, `Retry-After`
-handling, rate-limit handling, pagination helpers, or observability hooks and
-logging.
+plugins, HTTP status-error or transport-error integration, retries/backoff,
+`Retry-After` handling, rate-limit handling, pagination helpers, or
+observability hooks and logging.
 
 Non-2xx HTTP responses currently return `ResponseData`; package-level status
 errors are not implemented yet.
